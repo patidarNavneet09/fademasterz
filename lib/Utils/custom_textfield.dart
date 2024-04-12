@@ -126,7 +126,7 @@ class MyTextField {
 
 class CustomTextField extends StatelessWidget {
   final String? title;
-
+  final bool? readonly;
   final TextEditingController controller;
   final FocusNode? focusNode;
   final TextInputType? textInputType;
@@ -138,6 +138,7 @@ class CustomTextField extends StatelessWidget {
   final BorderSide? borderSide;
   final String hintText;
   final bool? obscureText;
+  final bool? validator;
   final bool? isFilled;
   final bool? enabled;
   final Color? fillColor;
@@ -168,6 +169,8 @@ class CustomTextField extends StatelessWidget {
     this.style,
     this.enabled,
     this.inputFormatters,
+    this.validator,
+    this.readonly,
   });
 
   @override
@@ -178,6 +181,7 @@ class CustomTextField extends StatelessWidget {
           return 'Please fill field';
         }
       },
+      readOnly: readonly ?? false,
       maxLines: maxLines ?? 1,
       maxLength: maxLength,
       controller: controller,

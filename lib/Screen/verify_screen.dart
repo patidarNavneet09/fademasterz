@@ -1,15 +1,22 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:fademasterz/Modal/verify_otp_modal.dart';
 import 'package:fademasterz/Screen/profile_setup_screen.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
+import 'package:fademasterz/Utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../ApiService/api_service.dart';
 import '../Utils/app_color.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
+import '../Utils/utility.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String? phoneNo;
@@ -119,13 +126,13 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
               blinkWhenObscuring: true,
               animationType: AnimationType.fade,
-              validator: (v) {
-                if (v!.length < 3) {
-                  return "I'm from validator";
-                } else {
-                  return null;
-                }
-              },
+              // validator: (v) {
+              //   if (v!.length < 3) {
+              //     return ;
+              //   } else {
+              //     return null;
+              //   }
+              // },
               pinTheme: PinTheme(
                 inactiveFillColor: AppColor.black,
                 inactiveColor: AppColor.yellow.withOpacity(.21),
@@ -138,8 +145,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 fieldWidth: 71,
                 activeFillColor: AppColor.black,
               ),
-              cursorColor: Colors.black,
-
+              cursorColor: AppColor.yellow,
               animationDuration: const Duration(milliseconds: 300),
               enableActiveFill: true,
               errorAnimationController: errorController,
@@ -208,7 +214,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 ),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 30,
             ),
           ],
@@ -219,14 +225,85 @@ class _VerifyScreenState extends State<VerifyScreen> {
         title: AppStrings.verify,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProfileSetup(),
-            ),
-          );
+          if (isValidate()) {
+            verifyOtp(context);
+          }
         },
       ),
     );
+  }
+
+  bool isValidate() {
+    if (otpTextFieldCn.text.isEmpty) {
+      Helper().showToast('Please Enter Otp');
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  VerifyOtpModal verifyOtpModal = VerifyOtpModal();
+  Future<void> verifyOtp(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+    request["country_code"] = "91";
+    request['mobile_number'] = widget.phoneNo;
+    request["otp"] = otpTextFieldCn.text.trim();
+    request["fcm_token"] = "test";
+    request["device_id"] = sharedPreferences.getString('deviceId');
+    request["device"] = sharedPreferences.getString('deviceType');
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+      Uri.parse(
+        ApiService.verifyOtp,
+      ),
+      body: jsonEncode(request),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+
+    if (jsonResponse['status'] == true) {
+      sharedPreferences.setBool("isLogin", true);
+      verifyOtpModal = VerifyOtpModal.fromJson(jsonResponse);
+
+      sharedPreferences.setString(
+          "access_Token", verifyOtpModal.data!.token.toString());
+
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                ProfileSetup(phoneNo: widget.phoneNo.toString()),
+          ),
+        );
+      }
+    } else {
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+    }
   }
 }

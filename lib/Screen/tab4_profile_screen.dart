@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:fademasterz/Modal/profile_modal.dart';
 import 'package:fademasterz/Screen/edit_profile_screen.dart';
 import 'package:fademasterz/Screen/help_screen.dart';
 import 'package:fademasterz/Screen/privacy_policy_screen.dart';
@@ -12,8 +14,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../ApiService/api_service.dart';
 import '../Utils/app_fonts.dart';
+import '../Utils/helper.dart';
+import '../Utils/utility.dart';
 import 'enter_yourno.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -25,6 +32,33 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  ProfileModal profileModal = ProfileModal();
+  String? name;
+  String? image;
+
+  Future<void> userProfile() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    image = sharedPreferences.getString('image');
+    name = sharedPreferences.getString('name');
+    setState(() {});
+    debugPrint('>>>>image>>>>>>>>>>$image<<<<<<<<<<<<<<');
+    debugPrint('>>>>name>>>>>>>>>>$name<<<<<<<<<<<<<<');
+  }
+
+  void updateProfile() {
+    userProfile();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    userProfile();
+    setState(() {});
+    super.initState();
+  }
+
   final picker = ImagePicker();
   File? _imageFile;
   Future getImageFromGallery() async {
@@ -112,29 +146,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       alignment: Alignment.center,
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(70),
-                          child: _imageFile == null
-                              ? Image.asset(
-                                  AppAssets.dummyImage,
-                                  height: 72,
-                                  width: 72,
-                                  fit: BoxFit.fill,
-                                )
-                              : Image.file(
-                                  _imageFile ?? File('path'),
-                                  height: 72,
-                                  width: 72,
-                                  fit: BoxFit.fill,
-                                ),
-                        ),
+                            borderRadius: BorderRadius.circular(70),
+                            child: Visibility(
+                              visible: (image?.isNotEmpty ?? false),
+                              child: Image.network(
+                                ApiService.imageUrl + (image ?? ''),
+                                height: 72,
+                                width: 72,
+                                fit: BoxFit.fill,
+                              ),
+                            )
+
+                            // _imageFile == null
+                            //     ? Image.asset(
+                            //         AppAssets.dummyImage,
+                            //         height: 72,
+                            //         width: 72,
+                            //         fit: BoxFit.fill,
+                            //       )
+                            //     : Image.file(
+                            //         _imageFile ?? File('path'),
+                            //         height: 72,
+                            //         width: 72,
+                            //         fit: BoxFit.fill,
+                            //       ),
+                            ),
                         Positioned(
                           bottom: -3,
                           right: 2,
                           child: InkWell(
-                              onTap: () {
-                                showOptions();
-                              },
-                              child: SvgPicture.asset(AppIcon.cameraIcon)),
+                            onTap: () {
+                              showOptions();
+                            },
+                            child: SvgPicture.asset(
+                              AppIcon.cameraIcon,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -142,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 4,
                     ),
                     Text(
-                      'Robert Pattinson',
+                      (name ?? ''),
                       style: AppFonts.appText.copyWith(fontSize: 17),
                     ),
                   ],
@@ -156,9 +203,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const EditProfileScreen(
-                          //updateProfile: updateProfile,
-                          ),
+                      builder: (context) => EditProfileScreen(
+                        updateProfile: updateProfile,
+                      ),
                     ),
                   );
                 },
@@ -410,15 +457,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  EnterYourNo(),
-                                            ),
-                                            (route) => false);
-                                      },
+                                      onPressed: () {},
                                       style: ElevatedButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 30, vertical: 12),
@@ -432,7 +471,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           style: AppFonts.blackFont),
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 30,
                                   ),
                                   Expanded(
@@ -473,11 +512,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             17,
                                           ),
                                         ),
-                                        backgroundColor: Color(
+                                        backgroundColor: const Color(
                                           0xffA4A4A4,
                                         ),
                                       ),
-                                      child: Text(AppStrings.no,
+                                      child: const Text(AppStrings.no,
                                           style: AppFonts.blackFont),
                                     ),
                                   ),
@@ -632,11 +671,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             17,
                                           ),
                                         ),
-                                        backgroundColor: Color(
+                                        backgroundColor: const Color(
                                           0xffA4A4A4,
                                         ),
                                       ),
-                                      child: Text(AppStrings.no,
+                                      child: const Text(AppStrings.no,
                                           style: AppFonts.blackFont),
                                     ),
                                   ),
@@ -691,5 +730,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> userLogout(BuildContext context) async {
+    final SharedPreferences sharedPreferences =
+        await SharedPreferences.getInstance();
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+    HttpWithMiddleware http = HttpWithMiddleware.build(middlewares: [
+      HttpLogger(logLevel: LogLevel.BODY),
+    ]);
+    var response = await http.post(
+        Uri.parse(
+          ApiService.logout,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          "content-type": "application/json",
+          'Accept': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(
+        context,
+        false,
+      );
+    }
+    if (jsonResponse['status'] == true) {
+      Helper().showToast(jsonResponse['message']);
+      await sharedPreferences.setBool("profileSetUp", false);
+      await sharedPreferences.setString("access_Token", '');
+      setState(() {});
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const EnterYourNo(),
+            ),
+            (route) => false);
+      }
+    } else if (jsonResponse['message'] == 'Unauthenticated.') {
+      await sharedPreferences.setBool("isLogin", false);
+      await sharedPreferences.setString("access_Token", '');
+      setState(() {});
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => const EnterYourNo(),
+            ),
+            (Route<dynamic> route) => false);
+      }
+    } else {
+      Helper().showToast(jsonResponse['message']);
+    }
   }
 }

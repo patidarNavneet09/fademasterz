@@ -4,7 +4,6 @@ import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:fademasterz/Utils/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../../Utils/app_fonts.dart';
@@ -76,7 +75,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                 backgroundColor: AppColor.black,
                 initialDisplayDate: DateTime.now(),
                 monthViewSettings: const DateRangePickerMonthViewSettings(
-                  dayFormat: DateFormat.ABBR_WEEKDAY,
+                  dayFormat: 'EEE',
                   weekNumberStyle: DateRangePickerWeekNumberStyle(
                     textStyle: AppFonts.appText,
                   ),
@@ -88,6 +87,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                   cellDecoration: BoxDecoration(),
                   todayTextStyle: AppFonts.appText,
                   weekendTextStyle: AppFonts.yellowFont,
+                  blackoutDatesDecoration: BoxDecoration(),
                 ),
                 showNavigationArrow: true,
                 todayHighlightColor: AppColor.yellow,

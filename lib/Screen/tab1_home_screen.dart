@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fademasterz/Screen/notification_screen.dart';
 import 'package:fademasterz/Screen/shop_detail.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
@@ -7,9 +9,15 @@ import 'package:fademasterz/Utils/app_string.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../ApiService/api_service.dart';
+import '../Modal/profile_modal.dart';
 import '../Utils/bottam_sheet.dart';
 import '../Utils/custom_app_button.dart';
+import '../Utils/helper.dart';
+import '../Utils/utility.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController searchCn = TextEditingController();
   void _showDialog() async {
     await showDialog(
-      //   barrierDismissible: false,
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return Dialog(
@@ -130,9 +138,73 @@ class _HomeScreenState extends State<HomeScreen> {
     Future.delayed(Duration(milliseconds: 10), () {
       _showDialog();
     });
+    profileDetail(context);
 
-    setState(() {});
     super.initState();
+  }
+
+  ProfileModal profileModal = ProfileModal();
+  Future<void> profileDetail(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.profile,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+
+    if (jsonResponse['status'] == true) {
+      profileModal = ProfileModal.fromJson(jsonResponse);
+      sharedPreferences.setString('image', profileModal.data?.image ?? '');
+      sharedPreferences.setString('name', profileModal.data?.name ?? '');
+      sharedPreferences.setString('email', profileModal.data?.email ?? '');
+      sharedPreferences.setString('phone', profileModal.data?.phone ?? '');
+
+      // sharedPreferences.setString(
+      //   'userdata',
+      //   profileUserDataToJson(profileModal.data),
+      // );
+
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      Utility.progressLoadingDialog(context, false);
+
+      setState(() {});
+      if (context.mounted) {
+      } else {
+        Utility.progressLoadingDialog(context, false);
+
+        Helper().showToast(
+          jsonResponse['message'],
+        );
+      }
+    }
   }
 
   @override
@@ -151,15 +223,24 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 children: [
                   ClipRRect(
-                      borderRadius: BorderRadius.circular(25),
-                      child: Image.asset(
-                        AppAssets.dummyImage,
+                    borderRadius: BorderRadius.circular(25),
+                    child: Visibility(
+                      visible: (profileModal.data?.image?.isNotEmpty ?? false),
+                      child: Image.network(
+                        ApiService.imageUrl + (profileModal.data?.image ?? ''),
                         height: 36,
                         width: 36,
                         fit: BoxFit.cover,
-                      )
+                      ),
+                    ),
+                    //     Image.asset(
+                    //   AppAssets.dummyImage,
+                    //   height: 36,
+                    //   width: 36,
+                    //   fit: BoxFit.cover,
+                    // )
 
-                      /*        userImage != null
+                    /*        userImage != null
                         ? CachedNetworkImage(
                       imageUrl: userImage.toString(),
                       height: 55,
@@ -188,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                     )
                         : null,*/
-                      ),
+                  ),
                   const SizedBox(
                     width: 10,
                   ),
@@ -198,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Welcome, Ronald',
+                          'Welcome, ${profileModal.data?.name ?? ''}',
                           style: AppFonts.text
                               .copyWith(fontSize: 16, color: AppColor.yellow),
                         ),

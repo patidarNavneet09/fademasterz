@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fademasterz/Screen/verify_screen.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
 import 'package:fademasterz/Utils/app_color.dart';
@@ -7,8 +9,13 @@ import 'package:fademasterz/Utils/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../ApiService/api_service.dart';
 import '../Utils/custom_app_button.dart';
+import '../Utils/helper.dart';
+import '../Utils/utility.dart';
 
 class EnterYourNo extends StatefulWidget {
   const EnterYourNo({super.key});
@@ -19,6 +26,8 @@ class EnterYourNo extends StatefulWidget {
 
 class _EnterYourNoState extends State<EnterYourNo> {
   TextEditingController phoneCn = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,26 +58,29 @@ class _EnterYourNoState extends State<EnterYourNo> {
             const SizedBox(
               height: 41,
             ),
-            CustomTextField(
-              controller: phoneCn,
-              hintText: AppStrings.phoneNumber,
-              maxLength: 11,
-              textInputType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(
-                    r'^\d+?\d*',
+            Form(
+              key: _formKey,
+              child: CustomTextField(
+                controller: phoneCn,
+                hintText: AppStrings.phoneNumber,
+                maxLength: 11,
+                textInputType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp(
+                      r'^\d+?\d*',
+                    ),
                   ),
-                ),
-              ],
-              prefixIcon: Align(
-                heightFactor: 2,
-                widthFactor: 2,
-                child: SvgPicture.asset(
-                  AppIcon.phoneIcon,
-                  height: 17,
-                  width: 17,
+                ],
+                prefixIcon: Align(
+                  heightFactor: 2,
+                  widthFactor: 2,
+                  child: SvgPicture.asset(
+                    AppIcon.phoneIcon,
+                    height: 17,
+                    width: 17,
+                  ),
                 ),
               ),
             ),
@@ -80,16 +92,76 @@ class _EnterYourNoState extends State<EnterYourNo> {
         title: AppStrings.next,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VerifyScreen(
-                phoneNo: phoneCn.text.trim(),
-              ),
-            ),
-          );
+          if (isValidate()) {
+            enterNumberApi(context);
+          }
         },
       ),
     );
+  }
+
+  bool isValidate() {
+    if (phoneCn.text.isEmpty || phoneCn.text.length < 10) {
+      Helper().showToast('Please Enter 10 Digit Mobile No.');
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> enterNumberApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+    request["country_code"] = "91";
+    request['mobile_number'] = phoneCn.text.trim();
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+      Uri.parse(
+        ApiService.enterNumber,
+      ),
+      body: jsonEncode(request),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+
+    if (jsonResponse['status'] == true) {
+      //  sharedPreferences.setBool("isLogin", true);
+
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerifyScreen(
+              phoneNo: phoneCn.text.trim(),
+            ),
+          ),
+        );
+      } else {
+        Helper().showToast(
+          jsonResponse['message'],
+        );
+      }
+    }
   }
 }
