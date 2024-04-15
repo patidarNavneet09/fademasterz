@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:fademasterz/Modal/profile_modal.dart';
 import 'package:fademasterz/Screen/edit_profile_screen.dart';
@@ -10,10 +9,8 @@ import 'package:fademasterz/Utils/app_assets.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,8 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     image = sharedPreferences.getString('image');
     name = sharedPreferences.getString('name');
     setState(() {});
-    debugPrint('>>>>image>>>>>>>>>>$image<<<<<<<<<<<<<<');
-    debugPrint('>>>>name>>>>>>>>>>$name<<<<<<<<<<<<<<');
   }
 
   void updateProfile() {
@@ -57,64 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     userProfile();
     setState(() {});
     super.initState();
-  }
-
-  final picker = ImagePicker();
-  File? _imageFile;
-  Future getImageFromGallery() async {
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-    );
-    setState(() {
-      if (pickedFile != null) {
-        _imageFile = File(pickedFile.path);
-      }
-    });
-  }
-
-  Future getImageFromCamera() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    setState(() {
-      if (pickedFile != null) {
-        _imageFile = File(pickedFile.path);
-      }
-    });
-  }
-
-  Future showOptions() async {
-    showCupertinoModalPopup(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            child: const Text('Photo Gallery'),
-            onPressed: () {
-              // close the options modal
-              Navigator.of(context).pop();
-              // get image from gallery
-              getImageFromGallery();
-            },
-          ),
-          CupertinoActionSheetAction(
-            child: const Text('Camera'),
-            onPressed: () {
-              // close the options modal
-              Navigator.of(context).pop();
-              // get image from camera
-              getImageFromCamera();
-            },
-          ),
-          CupertinoActionSheetAction(
-            child: const Text('Cancel'),
-            onPressed: () {
-              // close the options modal
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -142,49 +79,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppColor.black),
                 child: Column(
                   children: [
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        ClipRRect(
-                            borderRadius: BorderRadius.circular(70),
-                            child: Visibility(
-                              visible: (image?.isNotEmpty ?? false),
-                              child: Image.network(
-                                ApiService.imageUrl + (image ?? ''),
-                                height: 72,
-                                width: 72,
-                                fit: BoxFit.fill,
-                              ),
-                            )
-
-                            // _imageFile == null
-                            //     ? Image.asset(
-                            //         AppAssets.dummyImage,
-                            //         height: 72,
-                            //         width: 72,
-                            //         fit: BoxFit.fill,
-                            //       )
-                            //     : Image.file(
-                            //         _imageFile ?? File('path'),
-                            //         height: 72,
-                            //         width: 72,
-                            //         fit: BoxFit.fill,
-                            //       ),
-                            ),
-                        Positioned(
-                          bottom: -3,
-                          right: 2,
-                          child: InkWell(
-                            onTap: () {
-                              showOptions();
-                            },
-                            child: SvgPicture.asset(
-                              AppIcon.cameraIcon,
-                            ),
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(70),
+                        child: Visibility(
+                          visible: (image?.isNotEmpty ?? false),
+                          child: Image.network(
+                            ApiService.imageUrl + (image ?? ''),
+                            height: 72,
+                            width: 72,
+                            fit: BoxFit.fill,
                           ),
+                        )
+
+                        // _imageFile == null
+                        //     ? Image.asset(
+                        //         AppAssets.dummyImage,
+                        //         height: 72,
+                        //         width: 72,
+                        //         fit: BoxFit.fill,
+                        //       )
+                        //     : Image.file(
+                        //         _imageFile ?? File('path'),
+                        //         height: 72,
+                        //         width: 72,
+                        //         fit: BoxFit.fill,
+                        //       ),
                         ),
-                      ],
-                    ),
                     const SizedBox(
                       height: 4,
                     ),
@@ -457,7 +377,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        userLogout(context);
+                                      },
                                       style: ElevatedButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 30, vertical: 12),
@@ -765,6 +687,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     if (jsonResponse['status'] == true) {
       Helper().showToast(jsonResponse['message']);
+
       await sharedPreferences.setBool("profileSetUp", false);
       await sharedPreferences.setString("access_Token", '');
       setState(() {});
@@ -777,7 +700,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             (route) => false);
       }
     } else if (jsonResponse['message'] == 'Unauthenticated.') {
-      await sharedPreferences.setBool("isLogin", false);
+      await sharedPreferences.setBool("profileSetUp", false);
       await sharedPreferences.setString("access_Token", '');
       setState(() {});
       if (context.mounted) {

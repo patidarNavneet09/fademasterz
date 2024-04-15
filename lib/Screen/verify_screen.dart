@@ -13,6 +13,7 @@ import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
+import '../Dashboard/dashboard.dart';
 import '../Utils/app_color.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
@@ -242,16 +243,17 @@ class _VerifyScreenState extends State<VerifyScreen> {
     }
   }
 
+  bool? profileSetUp = false;
   VerifyOtpModal verifyOtpModal = VerifyOtpModal();
   Future<void> verifyOtp(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-
+    // profileSetUp = sharedPreferences.getBool('profileSetUp');
     if (context.mounted) {
       Utility.progressLoadingDialog(context, true);
     }
     var request = {};
     request["country_code"] = "91";
-    request['mobile_number'] = widget.phoneNo;
+    request['mobile_number'] = widget.phoneNo.toString();
     request["otp"] = otpTextFieldCn.text.trim();
     request["fcm_token"] = "test";
     request["device_id"] = sharedPreferences.getString('deviceId');
@@ -282,23 +284,36 @@ class _VerifyScreenState extends State<VerifyScreen> {
     );
 
     if (jsonResponse['status'] == true) {
-      sharedPreferences.setBool("isLogin", true);
+      //sharedPreferences.setBool("profileSetUp", true);
       verifyOtpModal = VerifyOtpModal.fromJson(jsonResponse);
 
       sharedPreferences.setString(
-          "access_Token", verifyOtpModal.data!.token.toString());
+          "access_Token", verifyOtpModal.data!.userDetail!.token.toString());
 
       Helper().showToast(
         jsonResponse['message'],
       );
       if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ProfileSetup(phoneNo: widget.phoneNo.toString()),
-          ),
-        );
+        debugPrint(
+            '>>>>>>>>>>>>>>${verifyOtpModal.data?.userDetail?.name}<<<<<<<<<<<<<<');
+        if (verifyOtpModal.data?.isSetup == 'yes') {
+          // sharedPreferences.setBool("profileSetUp", true);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ProfileSetup(phoneNo: widget.phoneNo.toString()),
+            ),
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DashBoardScreen(selectIndex: 0),
+            ),
+            (route) => false,
+          );
+        }
       }
     } else {
       Helper().showToast(

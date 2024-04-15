@@ -4,8 +4,6 @@
 
 import 'dart:convert';
 
-import 'package:fademasterz/Modal/profile_modal.dart';
-
 VerifyOtpModal verifyOtpModalFromJson(String str) =>
     VerifyOtpModal.fromJson(json.decode(str));
 
@@ -14,7 +12,7 @@ String verifyOtpModalToJson(VerifyOtpModal data) => json.encode(data.toJson());
 class VerifyOtpModal {
   bool? status;
   String? message;
-  ProfileUserData? data;
+  Data? data;
 
   VerifyOtpModal({
     this.status,
@@ -25,9 +23,7 @@ class VerifyOtpModal {
   factory VerifyOtpModal.fromJson(Map<String, dynamic> json) => VerifyOtpModal(
         status: json["status"],
         message: json["message"],
-        data: json["data"] == null
-            ? null
-            : ProfileUserData.fromJson(json["data"]),
+        data: json["data"] == null ? null : Data.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -35,14 +31,31 @@ class VerifyOtpModal {
         "message": message,
         "data": data?.toJson(),
       };
-
-  @override
-  String toString() {
-    return 'VerifyOtpModal{status: $status, message: $message, data: $data}';
-  }
 }
 
 class Data {
+  UserDetail? userDetail;
+  String? isSetup;
+
+  Data({
+    this.userDetail,
+    this.isSetup,
+  });
+
+  factory Data.fromJson(Map<String, dynamic> json) => Data(
+        userDetail: json["user_detail"] == null
+            ? null
+            : UserDetail.fromJson(json["user_detail"]),
+        isSetup: json["is_setup"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "user_detail": userDetail?.toJson(),
+        "is_setup": isSetup,
+      };
+}
+
+class UserDetail {
   int? id;
   String? image;
   String? name;
@@ -68,7 +81,7 @@ class Data {
   DateTime? updatedAt;
   String? token;
 
-  Data({
+  UserDetail({
     this.id,
     this.image,
     this.name,
@@ -95,7 +108,7 @@ class Data {
     this.token,
   });
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory UserDetail.fromJson(Map<String, dynamic> json) => UserDetail(
         id: json["id"],
         image: json["image"],
         name: json["name"],
@@ -155,6 +168,6 @@ class Data {
 
   @override
   String toString() {
-    return 'Data{id: $id, image: $image, name: $name, email: $email, countryCode: $countryCode, phone: $phone, status: $status, address: $address, lat: $lat, lng: $lng, serviceCategoryIds: $serviceCategoryIds, workExperience: $workExperience, instagramLink: $instagramLink, shopStartTime: $shopStartTime, shopEndTime: $shopEndTime, note: $note, role: $role, mobileVerify: $mobileVerify, device: $device, deviceId: $deviceId, fcmToken: $fcmToken, createdAt: $createdAt, updatedAt: $updatedAt, token: $token}';
+    return 'UserDetail{id: $id, image: $image, name: $name, email: $email, countryCode: $countryCode, phone: $phone, status: $status, address: $address, lat: $lat, lng: $lng, serviceCategoryIds: $serviceCategoryIds, workExperience: $workExperience, instagramLink: $instagramLink, shopStartTime: $shopStartTime, shopEndTime: $shopEndTime, note: $note, role: $role, mobileVerify: $mobileVerify, device: $device, deviceId: $deviceId, fcmToken: $fcmToken, createdAt: $createdAt, updatedAt: $updatedAt, token: $token}';
   }
 }

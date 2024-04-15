@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:fademasterz/Modal/shop_detail_modal.dart';
 import 'package:fademasterz/Screen/reviewes_screen.dart';
 import 'package:fademasterz/Screen/select_your_service_screen.dart';
 import 'package:fademasterz/Screen/services_screen.dart';
@@ -8,11 +11,17 @@ import 'package:fademasterz/Utils/app_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:readmore/readmore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../ApiService/api_service.dart';
 import '../Utils/app_fonts.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
+import '../Utils/helper.dart';
+import '../Utils/utility.dart';
 import 'gallery_screen.dart';
 
 class ShopDetail extends StatefulWidget {
@@ -31,12 +40,12 @@ class _ShopDetailState extends State<ShopDetail> {
 
   @override
   void initState() {
+    shopDetail(context);
     categories = [
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
         child: ReadMoreText(
-          'Lorem ipsum dolor sit amet consectetur. Ac intum molestie at in eu donec velit. '
-          'Commodo dolor malesuada quisque adipiscing est vestibulum nibh. ',
+          (shopDetailModal.data?.about ?? ''),
           trimMode: TrimMode.Line,
           trimLines: 3,
           trimLength: 200,
@@ -320,9 +329,10 @@ class _ShopDetailState extends State<ShopDetail> {
             height: 250,
             child: Stack(
               children: [
-                Image.asset(
-                  AppAssets.shopImage,
+                Image.network(
+                  ApiService.imageUrl + (shopDetailModal.data?.image ?? ''),
                   fit: BoxFit.fill,
+                  height: 300,
                   width: MediaQuery.of(context).size.width,
                 ),
                 Positioned(
@@ -357,7 +367,7 @@ class _ShopDetailState extends State<ShopDetail> {
                       vertical: 10,
                     ),
                     child: Text(
-                      AppStrings.shopName,
+                      shopDetailModal.data?.name ?? '',
                       style: AppFonts.regular.copyWith(
                         fontSize: 20,
                       ),
@@ -376,7 +386,7 @@ class _ShopDetailState extends State<ShopDetail> {
                           width: 10,
                         ),
                         Text(
-                          'Sector 1, near shop, city center',
+                          shopDetailModal.data?.address ?? '',
                           style: AppFonts.regular.copyWith(
                               fontSize: 15, fontWeight: FontWeight.w500),
                         ),
@@ -394,7 +404,7 @@ class _ShopDetailState extends State<ShopDetail> {
                           width: 10,
                         ),
                         Text(
-                          '4.9(4000 reviews)',
+                          shopDetailModal.data?.avgRating ?? '',
                           style: AppFonts.regular.copyWith(
                               fontSize: 15, fontWeight: FontWeight.w500),
                         ),
@@ -407,17 +417,23 @@ class _ShopDetailState extends State<ShopDetail> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          children: [
-                            SvgPicture.asset(AppIcon.instagramIcon),
-                            const SizedBox(
-                              height: 6,
-                            ),
-                            Text(
-                              AppStrings.instagram,
-                              style: AppFonts.regular.copyWith(fontSize: 15),
-                            )
-                          ],
+                        InkWell(
+                          onTap: () {
+                            launchUrl(Uri.parse(
+                                shopDetailModal.data?.instagramLink ?? ''));
+                          },
+                          child: Column(
+                            children: [
+                              SvgPicture.asset(AppIcon.instagramIcon),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Text(
+                                AppStrings.instagram,
+                                style: AppFonts.regular.copyWith(fontSize: 15),
+                              )
+                            ],
+                          ),
                         ),
                         Column(
                           children: [
@@ -489,11 +505,17 @@ class _ShopDetailState extends State<ShopDetail> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       scrollDirection: Axis.horizontal,
-                      itemCount: (images.length > 7) ? 7 : images.length,
+                      itemCount:
+                          (shopDetailModal.data?.ourSpecialist!.length ?? 0) > 5
+                              ? 7
+                              : (shopDetailModal.data?.ourSpecialist!.length ??
+                                  0),
                       addSemanticIndexes: true,
                       padding:
                           EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                       itemBuilder: (BuildContext context, int index) {
+                        var specialist =
+                            shopDetailModal.data?.ourSpecialist?[index];
                         return GestureDetector(
                           onTap: () {
                             selectIndex = index;
@@ -508,13 +530,17 @@ class _ShopDetailState extends State<ShopDetail> {
                             //  margin: const EdgeInsets.all(5),
                             child: Column(
                               children: [
-                                Image.asset(
-                                  images[index],
-                                  height: 60,
-                                  fit: BoxFit.fill,
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: Image.network(
+                                    ApiService.imageUrl +
+                                        (specialist?.image ?? ''),
+                                    height: 60,
+                                    fit: BoxFit.fill,
+                                  ),
                                 ),
                                 Text(
-                                  name[index],
+                                  (specialist?.name ?? ''),
                                   style: AppFonts.normalText
                                       .copyWith(fontSize: 14),
                                 )
@@ -599,5 +625,53 @@ class _ShopDetailState extends State<ShopDetail> {
         },
       ),
     );
+  }
+
+  ShopDetailModal shopDetailModal = ShopDetailModal();
+  var shop;
+  Future<void> shopDetail(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+
+    request["shop_id"] = sharedPreferences.getInt('shop_id');
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.shopDetail,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    Helper().showToast(
+      jsonResponse['message'],
+    );
+
+    if (jsonResponse['status'] == true) {
+      shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
+      shop = shopDetailModal;
+      setState(() {});
+    }
   }
 }

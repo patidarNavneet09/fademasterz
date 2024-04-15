@@ -12,4 +12,6 @@ class ApiService {
   static const String helpCenter = '${baseUrl}help-center';
   static const String logout = '${baseUrl}logout';
   static const String socialLinks = '${baseUrl}social-links';
+  static const String home = '${baseUrl}home';
+  static const String shopDetail = '${baseUrl}shop-detail';
 }

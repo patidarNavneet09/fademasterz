@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fademasterz/Screen/verify_screen.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
 import 'package:fademasterz/Utils/app_color.dart';
@@ -27,7 +28,7 @@ class EnterYourNo extends StatefulWidget {
 class _EnterYourNoState extends State<EnterYourNo> {
   TextEditingController phoneCn = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
+  late ConnectivityResult connectivityResult;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,7 +103,7 @@ class _EnterYourNoState extends State<EnterYourNo> {
 
   bool isValidate() {
     if (phoneCn.text.isEmpty || phoneCn.text.length < 10) {
-      Helper().showToast('Please Enter 10 Digit Mobile No.');
+      Helper().showToast('Please Enter 11 Digit Mobile No.');
       return false;
     }
     return true;
@@ -143,8 +144,6 @@ class _EnterYourNoState extends State<EnterYourNo> {
     );
 
     if (jsonResponse['status'] == true) {
-      //  sharedPreferences.setBool("isLogin", true);
-
       Helper().showToast(
         jsonResponse['message'],
       );

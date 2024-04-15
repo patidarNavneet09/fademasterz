@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fademasterz/Modal/home_page_modal.dart';
 import 'package:fademasterz/Screen/notification_screen.dart';
 import 'package:fademasterz/Screen/shop_detail.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
@@ -7,13 +8,13 @@ import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
-import '../Modal/profile_modal.dart';
 import '../Utils/bottam_sheet.dart';
 import '../Utils/custom_app_button.dart';
 import '../Utils/helper.dart';
@@ -28,11 +29,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   TextEditingController searchCn = TextEditingController();
-  void _showDialog() async {
+
+  Future<void> _showDialog(BuildContext context) async {
     await showDialog(
-      barrierDismissible: false,
       context: context,
-      builder: (context) {
+      builder: (ctx) {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
@@ -76,9 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 16,
                 ),
                 MyAppButton(
-                  onPress: () {
-                    getLocation();
-                    Navigator.of(context).pop();
+                  onPress: () async {
+                    await getLetLongPosition();
+                    Navigator.of(ctx).pop();
                   },
                   height: 48,
                   title: AppStrings.enableLocation,
@@ -91,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 MyAppButton(
                   onPress: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(ctx).pop();
                     // Navigator.push(
                     //   context,
                     //   MaterialPageRoute(
@@ -111,20 +112,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    ).then(
+      (value) => homeDetail(context),
     );
   }
 
   var latitude;
   var longitude;
-
-  getLocation() async {
-    LocationPermission permission;
+  late LocationPermission permission;
+  Future<void> getLocation() async {
     permission = await Geolocator.requestPermission();
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     latitude = position.latitude;
     longitude = position.longitude;
 
+    setState(() {});
     // LatLng location = LatLng(lat, long);
     debugPrint('>>>>>>>>>>>>>>${latitude}<<<<<<<<<<<<<<');
     debugPrint('>>>>>>>>>>>>>>${longitude}<<<<<<<<<<<<<<');
@@ -133,78 +136,42 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  void initState() {
-    Future.delayed(Duration(milliseconds: 10), () {
-      _showDialog();
-    });
-    profileDetail(context);
+  // late LocationPermission permission;
+  Future<void> getLetLongPosition() async {
+    bool serviceEnabled;
 
-    super.initState();
-  }
-
-  ProfileModal profileModal = ProfileModal();
-  Future<void> profileDetail(BuildContext context) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
-    var request = {};
-
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
-
-    var response = await http.post(
-        Uri.parse(
-          ApiService.profile,
-        ),
-        body: jsonEncode(request),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${sharedPreferences.getString("access_Token")}'
-        });
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, false);
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
     }
 
-    Map<String, dynamic> jsonResponse = jsonDecode(
-      response.body,
-    );
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
 
-    if (jsonResponse['status'] == true) {
-      profileModal = ProfileModal.fromJson(jsonResponse);
-      sharedPreferences.setString('image', profileModal.data?.image ?? '');
-      sharedPreferences.setString('name', profileModal.data?.name ?? '');
-      sharedPreferences.setString('email', profileModal.data?.email ?? '');
-      sharedPreferences.setString('phone', profileModal.data?.phone ?? '');
-
-      // sharedPreferences.setString(
-      //   'userdata',
-      //   profileUserDataToJson(profileModal.data),
-      // );
-
-      Helper().showToast(
-        jsonResponse['message'],
-      );
-      Utility.progressLoadingDialog(context, false);
-
-      setState(() {});
-      if (context.mounted) {
-      } else {
-        Utility.progressLoadingDialog(context, false);
-
-        Helper().showToast(
-          jsonResponse['message'],
-        );
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
       }
     }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    longitude = position.longitude.toString();
+    latitude = position.latitude.toString();
+  }
+
+  @override
+  void initState() {
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      await _showDialog(context);
+    });
+    //  profileDetail(context);
+
+    super.initState();
   }
 
   @override
@@ -225,9 +192,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(25),
                     child: Visibility(
-                      visible: (profileModal.data?.image?.isNotEmpty ?? false),
+                      visible:
+                          (homePageModal.data?.userDetail?.image?.isNotEmpty ??
+                              false),
                       child: Image.network(
-                        ApiService.imageUrl + (profileModal.data?.image ?? ''),
+                        ApiService.imageUrl +
+                            (homePageModal.data?.userDetail?.image ?? ''),
                         height: 36,
                         width: 36,
                         fit: BoxFit.cover,
@@ -279,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Welcome, ${profileModal.data?.name ?? ''}',
+                          'Welcome, ${homePageModal.data?.userDetail?.name ?? ''}',
                           style: AppFonts.text
                               .copyWith(fontSize: 16, color: AppColor.yellow),
                         ),
@@ -318,6 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTapOutside: (event) {
                           FocusManager.instance.primaryFocus?.unfocus();
                         },
+                        onChanged: (value) => homeDetail(context),
                         textAlignVertical: TextAlignVertical.bottom,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
@@ -400,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 15,
               ),
               Text(
-                '89 Shop avaliable',
+                '${homePageModal.data?.totalShops} Shop avaliable',
                 style: AppFonts.text.copyWith(
                   fontSize: 16,
                   color: AppColor.yellow,
@@ -410,11 +381,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ListView.separated(
                   // physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: 6,
-                  padding: EdgeInsets.only(top: 15),
+                  itemCount: (homePageModal.data?.shops?.length ?? 1),
+                  padding: const EdgeInsets.only(top: 15),
                   itemBuilder: (context, index) {
+                    var item = homePageModal.data?.shops?[index];
+
                     return InkWell(
-                      onTap: () {
+                      onTap: () async {
+                        SharedPreferences sharedPreferences =
+                            await SharedPreferences.getInstance();
+                        sharedPreferences.setInt('shop_id', item!.id!.toInt());
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -432,10 +408,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Row(
                           children: [
-                            Image.asset(
-                              AppAssets.homeImage,
+                            Container(
                               height: 77,
                               width: 76,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(
+                                    8,
+                                  ),
+                                ),
+                              ),
+                              child: Image.network(
+                                ApiService.imageUrl + (item?.image ?? ''),
+                                fit: BoxFit.fill,
+                              ),
                             ),
                             const SizedBox(
                               width: 10,
@@ -446,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   Text(
-                                    AppStrings.shopName,
+                                    (item?.name ?? ''),
                                     style:
                                         AppFonts.regular.copyWith(fontSize: 16),
                                   ),
@@ -462,7 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         width: 10,
                                       ),
                                       Text(
-                                        '4.9',
+                                        (item?.avgRating ?? ''),
                                         style: AppFonts.regular.copyWith(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500),
@@ -479,7 +466,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             width: 10,
                                           ),
                                           Text(
-                                            '1.5 Km Away',
+                                            (item?.distance ?? ''),
                                             style: AppFonts.regular.copyWith(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w500),
@@ -503,7 +490,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: Text(
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          'Sector 1, near shop, city center',
+                                          (item?.address ?? ''),
                                           style: AppFonts.regular.copyWith(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500),
@@ -532,301 +519,120 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // int selectIndex = 0;
-  // int selectIndex1 = 0;
-  // double startYr = 0;
-  // double endYr = 15;
-  //
-  // Future _modalBottomSheetMenu() async {
-  //   return showModalBottomSheet(
-  //       isDismissible: false,
-  //       backgroundColor: Colors.transparent,
-  //       context: context,
-  //       builder: (builder) {
-  //         return StatefulBuilder(
-  //             builder: (BuildContext context, StateSetter setState) {
-  //           return Container(
-  //             //  height: 370,
-  //             decoration: const BoxDecoration(
-  //               color: AppColor.bg,
-  //               borderRadius: BorderRadius.only(
-  //                 topLeft: Radius.circular(20),
-  //                 topRight: Radius.circular(20),
-  //               ),
-  //             ),
-  //             child: SingleChildScrollView(
-  //               child: Padding(
-  //                 padding:
-  //                     const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-  //                 child: Column(
-  //                   crossAxisAlignment: CrossAxisAlignment.start,
-  //                   children: [
-  //                     Align(
-  //                       alignment: Alignment.topRight,
-  //                       child: SizedBox(
-  //                         height: 21,
-  //                         width: 21,
-  //                         child: InkWell(
-  //                           onTap: () {
-  //                             Navigator.pop(context);
-  //                           },
-  //                           child: const Icon(
-  //                             Icons.cancel,
-  //                             size: 30,
-  //                             color: AppColor.yellow,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     Center(
-  //                       child: Text(
-  //                         AppStrings.filter,
-  //                         style: AppFonts.regular.copyWith(
-  //                           fontSize: 18,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 10,
-  //                     ),
-  //                     Divider(
-  //                       height: 1,
-  //                       color: AppColor.white.withOpacity(.10),
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 10,
-  //                     ),
-  //                     Text(
-  //                       AppStrings.category,
-  //                       style: AppFonts.regular.copyWith(
-  //                         fontSize: 16,
-  //                       ),
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 10,
-  //                     ),
-  //                     SizedBox(
-  //                       height: 33,
-  //                       child: ListView.separated(
-  //                         shrinkWrap: true,
-  //                         scrollDirection: Axis.horizontal,
-  //                         itemCount: category.length,
-  //                         itemBuilder: (BuildContext context, int index) {
-  //                           return InkWell(
-  //                             onTap: () => onTap(index),
-  //                             //     {
-  //                             //   // if (isSelectedIndex) {
-  //                             //   //   selectedIndex.remove(index);
-  //                             //   // } else {
-  //                             //   //   selectedIndex.add(index);
-  //                             //   //
-  //                             //   // }
-  //                             //   selectIndex = index;
-  //                             //
-  //                             //   setState(
-  //                             //     () {},
-  //                             //   );
-  //                             // },
-  //                             child: Container(
-  //                               padding:
-  //                                   const EdgeInsets.symmetric(horizontal: 16),
-  //                               alignment: Alignment.center,
-  //                               decoration: BoxDecoration(
-  //                                 color: (category[index].isSelected ?? true)
-  //                                     // selectIndex == index
-  //                                     ? AppColor.yellow
-  //                                     : Colors.transparent,
-  //                                 border: Border.all(color: AppColor.yellow),
-  //                                 borderRadius: BorderRadius.circular(19),
-  //                               ),
-  //                               //  margin: const EdgeInsets.all(5),
-  //                               child: Text(category[index].category ?? '',
-  //                                   style: (category[index].isSelected ?? true)
-  //                                       // selectIndex == index
-  //                                       ? AppFonts.text.copyWith(
-  //                                           color: AppColor.black1,
-  //                                           fontSize: 14)
-  //                                       : AppFonts.yellowFont),
-  //                             ),
-  //                           );
-  //                         },
-  //                         separatorBuilder: (BuildContext context, int index) {
-  //                           return const SizedBox(
-  //                             width: 8,
-  //                           );
-  //                         },
-  //                       ),
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 15,
-  //                     ),
-  //                     Text(
-  //                       AppStrings.availability,
-  //                       style: AppFonts.regular.copyWith(
-  //                         fontSize: 16,
-  //                       ),
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 15,
-  //                     ),
-  //                     SizedBox(
-  //                       height: 33,
-  //                       child: ListView.separated(
-  //                         shrinkWrap: true,
-  //                         scrollDirection: Axis.horizontal,
-  //                         itemCount: available.length,
-  //                         addSemanticIndexes: true,
-  //                         // padding: const EdgeInsets.symmetric(
-  //                         //   horizontal: 16,
-  //                         // ),
-  //                         itemBuilder: (BuildContext context, int index) {
-  //                           return InkWell(
-  //                             onTap: () {
-  //                               selectIndex1 = index;
-  //
-  //                               setState(
-  //                                 () {},
-  //                               );
-  //                             },
-  //                             child: Container(
-  //                               padding:
-  //                                   const EdgeInsets.symmetric(horizontal: 16),
-  //                               alignment: Alignment.center,
-  //                               decoration: BoxDecoration(
-  //                                 color: selectIndex1 == index
-  //                                     ? AppColor.yellow
-  //                                     : Colors.transparent,
-  //                                 border: Border.all(color: AppColor.yellow),
-  //                                 borderRadius: BorderRadius.circular(19),
-  //                               ),
-  //                               //  margin: const EdgeInsets.all(5),
-  //                               child: Text(available[index],
-  //                                   style: selectIndex1 == index
-  //                                       ? AppFonts.text.copyWith(
-  //                                           color: AppColor.black1,
-  //                                         )
-  //                                       : AppFonts.yellowFont),
-  //                             ),
-  //                           );
-  //                         },
-  //                         separatorBuilder: (BuildContext context, int index) {
-  //                           return const SizedBox(
-  //                             width: 8,
-  //                           );
-  //                         },
-  //                       ),
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 15,
-  //                     ),
-  //                     Text(
-  //                       AppStrings.experienceLevel,
-  //                       style: AppFonts.regular.copyWith(
-  //                         fontSize: 16,
-  //                       ),
-  //                     ),
-  //                     SliderTheme(
-  //                       data: const SliderThemeData(
-  //                         thumbColor: AppColor.yellow,
-  //                       ),
-  //                       child: RangeSlider(
-  //                         activeColor: AppColor.yellow,
-  //                         inactiveColor: AppColor.black,
-  //                         values: RangeValues(startYr, endYr),
-  //                         labels:
-  //                             RangeLabels(startYr.toString(), endYr.toString()),
-  //                         onChanged: (value) {
-  //                           setState(() {
-  //                             startYr = value.start;
-  //                             endYr = value.end;
-  //                           });
-  //                         },
-  //                         min: 0.0,
-  //                         max: startYr.toInt() < 15 ? 15 : endYr,
-  //                       ),
-  //                     ),
-  //                     Row(
-  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                       children: [
-  //                         Text(
-  //                           '${endYr} yr',
-  //                           style: AppFonts.yellowFont.copyWith(fontSize: 13),
-  //                         ),
-  //                         Text(
-  //                           AppStrings.all,
-  //                           style: AppFonts.yellowFont.copyWith(fontSize: 13),
-  //                         ),
-  //                       ],
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 15,
-  //                     ),
-  //                     Divider(
-  //                       height: 1,
-  //                       color: AppColor.white.withOpacity(.10),
-  //                     ),
-  //                     const SizedBox(
-  //                       height: 10,
-  //                     ),
-  //                     Row(
-  //                       children: [
-  //                         Expanded(
-  //                           child: ElevatedButton(
-  //                             onPressed: () {},
-  //                             style: ElevatedButton.styleFrom(
-  //                               padding:
-  //                                   const EdgeInsets.symmetric(vertical: 14),
-  //                               backgroundColor: Colors.transparent,
-  //                               shape: RoundedRectangleBorder(
-  //                                 side:
-  //                                     const BorderSide(color: AppColor.yellow),
-  //                                 borderRadius: BorderRadius.circular(
-  //                                   20,
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                             child: Text(AppStrings.reset,
-  //                                 style: AppFonts.yellowFont
-  //                                     .copyWith(fontSize: 16)),
-  //                           ),
-  //                         ),
-  //                         const SizedBox(
-  //                           width: 30,
-  //                         ),
-  //                         Expanded(
-  //                           child: ElevatedButton(
-  //                             onPressed: () {},
-  //                             style: ElevatedButton.styleFrom(
-  //                               padding:
-  //                                   const EdgeInsets.symmetric(vertical: 14),
-  //                               backgroundColor: AppColor.yellow,
-  //                               shape: RoundedRectangleBorder(
-  //                                 borderRadius: BorderRadius.circular(
-  //                                   20,
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                             child: Text(
-  //                               AppStrings.applyFilter,
-  //                               style: AppFonts.text.copyWith(
-  //                                   color: AppColor.black1, fontSize: 16),
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     )
-  //                   ],
-  //                 ),
-  //               ),
-  //             ),
-  //           );
-  //         });
-  //       });
-  // }
-  //
-  // void onTap(int index) {
-  //   category[index].isSelected = !(category[index].isSelected ?? false);
-  //   setState(() {});
-  //   //  selectIndex = !selectIndex;
-  // }
+/*  ProfileModal profileModal = ProfileModal();
+
+  Future<void> profileDetail(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.profile,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+
+    if (jsonResponse['status'] == true) {
+      profileModal = ProfileModal.fromJson(jsonResponse);
+      sharedPreferences.setString('image', profileModal.data?.image ?? '');
+      sharedPreferences.setString('name', profileModal.data?.name ?? '');
+      sharedPreferences.setString('email', profileModal.data?.email ?? '');
+      sharedPreferences.setString('phone', profileModal.data?.phone ?? '');
+      sharedPreferences.setBool("profileSetUp", true);
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      Utility.progressLoadingDialog(context, false);
+
+      setState(() {});
+      if (context.mounted) {
+      } else {
+        Utility.progressLoadingDialog(context, false);
+
+        Helper().showToast(
+          jsonResponse['message'],
+        );
+      }
+    }
+  }*/
+
+  HomePageModal homePageModal = HomePageModal();
+
+  Future<void> homeDetail(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+    request["latitude"] = latitude.toString();
+    request['longitude'] = longitude.toString();
+    request["search"] = searchCn.text.trim();
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.home,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    Helper().showToast(
+      jsonResponse['message'],
+    );
+
+    if (jsonResponse['status'] == true) {
+      homePageModal = HomePageModal.fromJson(jsonResponse);
+      sharedPreferences.setString(
+          'image', homePageModal.data?.userDetail?.image ?? '');
+      sharedPreferences.setString(
+          'name', homePageModal.data?.userDetail?.name ?? '');
+      sharedPreferences.setInt(
+          'shop_id', homePageModal.data?.shops!.first.id ?? 1);
+
+      sharedPreferences.setBool("profileSetUp", true);
+
+      setState(() {});
+    }
+  }
 }

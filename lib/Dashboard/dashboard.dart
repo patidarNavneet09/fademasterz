@@ -80,7 +80,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                     child: Column(
                       children: [
                         SvgPicture.asset(
-                          AppIcon.homeIcon,
+                          AppIcon.homeIcon1,
                           width: 21,
                           height: 22,
                           color: AppColor.lightGray,
@@ -147,10 +147,10 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                   child: Column(
                     children: [
                       SvgPicture.asset(
-                        AppIcon.bookingIcon,
+                        AppIcon.bookingIcon1,
                         width: 21,
-                        height: 22,
-                        color: AppColor.yellow,
+                        height: 21,
+                        //  color: AppColor.yellow,
                       ),
                       const SizedBox(
                         height: 8,
@@ -192,10 +192,9 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                   child: Column(
                     children: [
                       SvgPicture.asset(
-                        AppIcon.chatIcon,
+                        AppIcon.chatIcon1,
                         width: 21,
                         height: 22,
-                        color: AppColor.yellow,
                       ),
                       const SizedBox(height: 8),
                       Text(AppStrings.chat,
@@ -235,7 +234,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                   child: Column(
                     children: [
                       SvgPicture.asset(
-                        AppIcon.parsonIcon,
+                        AppIcon.profileIcon1,
                         width: 21,
                         height: 22,
                         color: AppColor.yellow,

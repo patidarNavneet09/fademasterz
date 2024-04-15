@@ -37,6 +37,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Transparent status bar
+      statusBarBrightness: Brightness.light, // Dark text for status bar
+    ));
     return MaterialApp(
       title: 'Fade Masterz',
       debugShowCheckedModeBanner: false,

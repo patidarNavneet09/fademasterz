@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:fademasterz/Modal/help_center_modal.dart';
+import 'package:fademasterz/Modal/social_link_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../ApiService/api_service.dart';
 import '../Utils/app_assets.dart';
@@ -26,7 +28,12 @@ class _HelpScreenState extends State<HelpScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => helpCenterApi(context));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => helpCenterApi(context),
+    );
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => socialLinkApi(context),
+    );
   }
 
   @override
@@ -153,69 +160,94 @@ class _HelpScreenState extends State<HelpScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  children: [
-                    SvgPicture.asset(
-                      AppIcon.instagram,
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Text(
-                      AppStrings.instagram,
-                      style: AppFonts.appText.copyWith(
-                        fontSize: 15,
+                GestureDetector(
+                  onTap: () {
+                    launchUrlStart(
+                        url: socialLinkModal.data?.instaUrl.toString() ?? '');
+                  },
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        AppIcon.instagram,
                       ),
-                    )
-                  ],
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Text(
+                        AppStrings.instagram,
+                        style: AppFonts.appText.copyWith(
+                          fontSize: 15,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-                Column(
-                  children: [
-                    SvgPicture.asset(
-                      AppIcon.twitterIcon,
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Text(
-                      AppStrings.twitter,
-                      style: AppFonts.appText.copyWith(
-                        fontSize: 15,
+                GestureDetector(
+                  onTap: () {
+                    launchUrlStart(
+                        url: socialLinkModal.data?.twitterUrl.toString() ?? '');
+                  },
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        AppIcon.twitterIcon,
                       ),
-                    )
-                  ],
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Text(
+                        AppStrings.twitter,
+                        style: AppFonts.appText.copyWith(
+                          fontSize: 15,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-                Column(
-                  children: [
-                    SvgPicture.asset(
-                      AppIcon.facebookIcon,
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Text(
-                      AppStrings.facebook,
-                      style: AppFonts.appText.copyWith(
-                        fontSize: 15,
+                InkWell(
+                  onTap: () {
+                    launchUrlStart(
+                        url:
+                            socialLinkModal.data?.facebookUrl.toString() ?? '');
+                  },
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        AppIcon.facebookIcon,
                       ),
-                    )
-                  ],
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Text(
+                        AppStrings.facebook,
+                        style: AppFonts.appText.copyWith(
+                          fontSize: 15,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-                Column(
-                  children: [
-                    SvgPicture.asset(
-                      AppIcon.whatsappIcon,
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Text(
-                      AppStrings.whatsapp,
-                      style: AppFonts.appText.copyWith(
-                        fontSize: 15,
+                InkWell(
+                  onTap: () {
+                    launchUrlStart(
+                        url: socialLinkModal.data?.whatsupUrl.toString() ?? '');
+                  },
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        AppIcon.whatsappIcon,
                       ),
-                    )
-                  ],
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Text(
+                        AppStrings.whatsapp,
+                        style: AppFonts.appText.copyWith(
+                          fontSize: 15,
+                        ),
+                      )
+                    ],
+                  ),
                 )
               ],
             )
@@ -225,7 +257,22 @@ class _HelpScreenState extends State<HelpScreen> {
     );
   }
 
+  final Uri _url = Uri.parse('https://flutter.dev');
+  Future<void> _launchUrl() async {
+    if (!await launchUrl(_url)) {
+      throw Exception('Could not launch $_url');
+    }
+  }
+
+  Future<void> launchUrlStart({required String url}) async {
+    debugPrint('>>>>>>>>>>>>>>${url}<<<<<<<<<<<<<<');
+    if (!await launchUrl(Uri.parse(url))) {
+      throw 'Could not launch $url';
+    }
+  }
+
   HelpCenterModal helpCenterModal = HelpCenterModal();
+  SocialLinkModal socialLinkModal = SocialLinkModal();
   Future<void> helpCenterApi(BuildContext context) async {
     if (context.mounted) {
       Utility.progressLoadingDialog(context, true);
@@ -258,6 +305,53 @@ class _HelpScreenState extends State<HelpScreen> {
 
     if (jsonResponse['status'] == true) {
       helpCenterModal = HelpCenterModal.fromJson(jsonResponse);
+
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+
+      setState(() {});
+      if (context.mounted) {
+      } else {
+        Helper().showToast(
+          jsonResponse['message'],
+        );
+      }
+    }
+  }
+
+  Future<void> socialLinkApi(BuildContext context) async {
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.socialLinks,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+
+    if (jsonResponse['status'] == true) {
+      socialLinkModal = SocialLinkModal.fromJson(jsonResponse);
 
       Helper().showToast(
         jsonResponse['message'],

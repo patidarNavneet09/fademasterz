@@ -55,21 +55,14 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              HtmlWidget(
-                (privacyPolicyModal.data?.privacyPolicy ?? ''),
-                customStylesBuilder: (element) {
-                  return {'color': 'white'};
-                },
+          child: HtmlWidget(
+            (privacyPolicyModal.data?.privacyPolicy ?? ''),
+            customStylesBuilder: (element) {
+              return {'color': 'white'};
+            },
 
-                textStyle: TextStyle(
-                  color: Colors.white,
-                ),
-                //  viewType: (privacyPolicyModal.data?.privacyPolicy ?? ''),
-              ),
-            ],
+            textStyle: const TextStyle(color: Colors.white, fontSize: 15),
+            //  viewType: (privacyPolicyModal.data?.privacyPolicy ?? ''),
           ),
         ),
       ),
@@ -106,11 +99,9 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    debugPrint('>>>>>>>>>>>>>>${jsonResponse}<<<<<<<<<<<<<<');
+
     if (jsonResponse['status'] == true) {
       privacyPolicyModal = PrivacyPolicyModal.fromJson(jsonResponse);
-      debugPrint(
-          '>>>>>>>>>>>>>>${privacyPolicyModal.data?.privacyPolicy}<<<<<<<<<<<<<<');
 
       Helper().showToast(
         jsonResponse['message'],
