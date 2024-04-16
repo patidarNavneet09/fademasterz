@@ -1,19 +1,27 @@
+import 'dart:convert';
+
 import 'package:dotted_border/dotted_border.dart';
+import 'package:fademasterz/Modal/choose_availiabilty_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:fademasterz/Utils/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../../Utils/app_fonts.dart';
 import '../../Utils/app_string.dart';
+import '../ApiService/api_service.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_list.dart';
+import '../Utils/helper.dart';
+import '../Utils/utility.dart';
 import 'booking_summary_screen.dart';
 
 class ChooseAvailabilityBarber extends StatefulWidget {
-  final double? price;
+  final String? price;
   const ChooseAvailabilityBarber({super.key, this.price});
 
   @override
@@ -38,6 +46,12 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
       _selectedDate = args.value.toString();
       debugPrint('>>>>>>>>>>>>>>${_selectedDate}<<<<<<<<<<<<<<');
     });
+  }
+
+  @override
+  void initState() {
+    _chooseAvailabilityApi(context);
+    super.initState();
   }
 
   @override
@@ -338,18 +352,11 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                     ),
                     CustomTextField(
                       controller: noteCn,
-                      hintText: 'Write a message |',
+                      hintText: 'Write a message',
                       maxLines: 4,
                       textInputAction: TextInputAction.done,
                       fillColor: const Color(0xff333333),
                     ),
-                    // MyTextField.myTextFormField(
-                    //     controller: noteCn,
-                    //     textInputType: TextInputType.text,
-                    //     textInputAction: TextInputAction.done,
-                    //     hintText: 'Write a message |',
-                    //     maxLines: 4,
-                    //     fillColor: Color(0xff333333))
                   ],
                 ),
               ),
@@ -381,11 +388,11 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
           child: Row(
             children: [
               Text(
-                '\$${widget.price?.toStringAsFixed(0)}',
+                '\$${widget.price}',
                 style: AppFonts.blackFont,
               ),
               const Spacer(),
-              Text(
+              const Text(
                 AppStrings.Continue,
                 style: AppFonts.blackFont,
               ),
@@ -398,5 +405,53 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
         ),
       ),
     );
+  }
+
+  ChooseAvailabilityResponse chooseAvailabilityResponse =
+      ChooseAvailabilityResponse();
+  Future<void> _chooseAvailabilityApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+    request["shop_id"] = sharedPreferences.getInt('shop_id');
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.chooseAvailability,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    Helper().showToast(
+      jsonResponse['message'],
+    );
+    if (jsonResponse['status'] == true) {
+      chooseAvailabilityResponse = ChooseAvailabilityResponse.fromJson(
+          jsonResponse); //.fromJson(jsonResponse);
+      debugPrint(
+          '>>>>>>>>>>>>>>${chooseAvailabilityResponse.data?.availableSpecialist?.first.name}<<<<<<<<<<<<<<');
+
+      setState(() {});
+    }
   }
 }

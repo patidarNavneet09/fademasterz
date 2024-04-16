@@ -31,112 +31,113 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController searchCn = TextEditingController();
 
   Future<void> _showDialog(BuildContext context) async {
-    await showDialog(
-      context: context,
-      builder: (ctx) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              17,
+    var permisssion = await Geolocator.checkPermission();
+    if (permisssion == LocationPermission.always ||
+        permisssion == LocationPermission.whileInUse) {
+      homeDetail(context);
+      return;
+    } else {
+      await showDialog(
+        context: context,
+        builder: (ctx) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(
+                17,
+              ),
             ),
-          ),
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 18,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 38, vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(AppIcon.locationDialogIcon),
-                const SizedBox(
-                  height: 12,
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                  child: Text(
-                    textAlign: TextAlign.center,
-                    AppStrings.enableLocation,
-                    style: AppFonts.blackFont.copyWith(
-                      fontSize: 20,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 38, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(AppIcon.locationDialogIcon),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 20),
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      AppStrings.enableLocation,
+                      style: AppFonts.blackFont.copyWith(
+                        fontSize: 20,
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    textAlign: TextAlign.center,
-                    AppStrings.locationNearest,
-                    style: AppFonts.blackFont
-                        .copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      AppStrings.locationNearest,
+                      style: AppFonts.blackFont
+                          .copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
                   ),
-                ),
-                const SizedBox(
-                  height: 16,
-                ),
-                MyAppButton(
-                  onPress: () async {
-                    await getLetLongPosition();
-                    Navigator.of(ctx).pop();
-                  },
-                  height: 48,
-                  title: AppStrings.enableLocation,
-                  style:
-                      AppFonts.blackFont.copyWith(fontWeight: FontWeight.w500),
-                  radius: 39,
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                MyAppButton(
-                  onPress: () {
-                    Navigator.of(ctx).pop();
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const DashBoardScreen(),
-                    //   ),
-                    // );
-                  },
-                  height: 48,
-                  title: AppStrings.cancel,
-                  style:
-                      AppFonts.blackFont.copyWith(fontWeight: FontWeight.w500),
-                  radius: 39,
-                  color: const Color(0xffFFFBF0),
-                ),
-              ],
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  MyAppButton(
+                    onPress: () async {
+                      await Geolocator.openLocationSettings();
+                      await getLocation();
+                      Navigator.of(ctx).pop();
+                    },
+                    height: 48,
+                    title: AppStrings.enableLocation,
+                    style: AppFonts.blackFont
+                        .copyWith(fontWeight: FontWeight.w500),
+                    radius: 39,
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  MyAppButton(
+                    onPress: () {
+                      Navigator.of(ctx).pop();
+                    },
+                    height: 48,
+                    title: AppStrings.cancel,
+                    style: AppFonts.blackFont
+                        .copyWith(fontWeight: FontWeight.w500),
+                    radius: 39,
+                    color: const Color(0xffFFFBF0),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
-    ).then(
-      (value) => homeDetail(context),
-    );
+          );
+        },
+      );
+      homeDetail(context);
+      return;
+    }
   }
 
-  var latitude;
-  var longitude;
+  double? latitude;
+  double? longitude;
   late LocationPermission permission;
-  Future<void> getLocation() async {
-    permission = await Geolocator.requestPermission();
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    latitude = position.latitude;
-    longitude = position.longitude;
 
-    setState(() {});
-    // LatLng location = LatLng(lat, long);
-    debugPrint('>>>>>>>>>>>>>>${latitude}<<<<<<<<<<<<<<');
-    debugPrint('>>>>>>>>>>>>>>${longitude}<<<<<<<<<<<<<<');
-    setState(() {
-      //  _currentPosition = location;
-    });
+  Future<void> getLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      latitude = position.latitude;
+      longitude = position.longitude;
+
+      setState(() {});
+    } catch (e) {
+      Helper().showToast(e.toString());
+    }
   }
 
   // late LocationPermission permission;
+
   Future<void> getLetLongPosition() async {
     bool serviceEnabled;
 
@@ -160,8 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-    longitude = position.longitude.toString();
-    latitude = position.latitude.toString();
+    longitude = position.longitude;
+    latitude = position.latitude;
   }
 
   @override
@@ -169,7 +170,6 @@ class _HomeScreenState extends State<HomeScreen> {
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       await _showDialog(context);
     });
-    //  profileDetail(context);
 
     super.initState();
   }
@@ -203,42 +203,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         fit: BoxFit.cover,
                       ),
                     ),
-                    //     Image.asset(
-                    //   AppAssets.dummyImage,
-                    //   height: 36,
-                    //   width: 36,
-                    //   fit: BoxFit.cover,
-                    // )
-
-                    /*        userImage != null
-                        ? CachedNetworkImage(
-                      imageUrl: userImage.toString(),
-                      height: 55,
-                      width: 55,
-                      fit: BoxFit.cover,
-                      placeholder: (
-                          context,
-                          url,
-                          ) =>
-                          Container(
-                            height: 32,
-                            width: 30,
-                            alignment: Alignment.center,
-                            child:
-                            const CircularProgressIndicator(
-                                color: AppColor.primary),
-                          ),
-                      errorWidget: (context, url, error) =>
-                          Container(
-                            height: 32,
-                            width: 30,
-                            alignment: Alignment.center,
-                            child:
-                            const CircularProgressIndicator(
-                                color: AppColor.primary),
-                          ),
-                    )
-                        : null,*/
                   ),
                   const SizedBox(
                     width: 10,
@@ -263,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => NotificationScreen(),
+                          builder: (context) => const NotificationScreen(),
                         ),
                       );
                     },
@@ -288,7 +252,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTapOutside: (event) {
                           FocusManager.instance.primaryFocus?.unfocus();
                         },
-                        onChanged: (value) => homeDetail(context),
+                        onChanged: (value) {
+                          homeDetail(context);
+                          setState(() {});
+                        },
                         textAlignVertical: TextAlignVertical.bottom,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
@@ -316,25 +283,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  // Expanded(
-                  //   child: CustomTextField(
-                  //     controller: searchCn,
-                  //     hintText: AppStrings.search,
-                  //     textInputType: TextInputType.text,
-                  //     textInputAction: TextInputAction.done,
-                  //     hintTextStyle: AppFonts.textFieldFont,
-                  //     radius: 5,
-                  //     prefixIcon: Align(
-                  //       heightFactor: 0.5,
-                  //       widthFactor: 0.5,
-                  //       child: SvgPicture.asset(
-                  //         AppIcon.searchIcon,
-                  //         height: 17,
-                  //         width: 17,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
                   const SizedBox(
                     width: 10,
                   ),
@@ -356,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       // height: 46,
                       // width: 48,
-                      padding: EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(12),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(6),
@@ -371,144 +319,159 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 15,
               ),
               Text(
-                '${homePageModal.data?.totalShops} Shop avaliable',
+                '${homePageModal.data?.totalShops} Shop available',
                 style: AppFonts.text.copyWith(
                   fontSize: 16,
                   color: AppColor.yellow,
                 ),
               ),
-              Expanded(
-                child: ListView.separated(
-                  // physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: (homePageModal.data?.shops?.length ?? 1),
-                  padding: const EdgeInsets.only(top: 15),
-                  itemBuilder: (context, index) {
-                    var item = homePageModal.data?.shops?[index];
+              Visibility(
+                // visible:
+                // replacement: Text(
+                //   'No Shop Found',
+                //   textAlign: TextAlign.center,
+                //   style: AppFonts.appText,
+                // ),
+                child: Expanded(
+                  child: ListView.separated(
+                    // physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: (homePageModal.data?.shops?.length ?? 1),
+                    padding: const EdgeInsets.only(top: 15),
+                    itemBuilder: (context, index) {
+                      var item = homePageModal.data?.shops?[index];
 
-                    return InkWell(
-                      onTap: () async {
-                        SharedPreferences sharedPreferences =
-                            await SharedPreferences.getInstance();
-                        sharedPreferences.setInt('shop_id', item!.id!.toInt());
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ShopDetail(),
+                      return InkWell(
+                        onTap: () async {
+                          SharedPreferences sharedPreferences =
+                              await SharedPreferences.getInstance();
+                          sharedPreferences.setInt(
+                            'shop_id',
+                            item!.id!.toInt(),
+                          );
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ShopDetail(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColor.black,
+                            borderRadius: BorderRadius.circular(
+                              15,
+                            ),
                           ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColor.black,
-                          borderRadius: BorderRadius.circular(
-                            11,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 77,
-                              width: 76,
-                              clipBehavior: Clip.antiAlias,
-                              decoration: const BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(
-                                    8,
+                          child: Row(
+                            children: [
+                              Container(
+                                height: 77,
+                                width: 76,
+                                clipBehavior: Clip.antiAlias,
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(
+                                      10,
+                                    ),
+                                  ),
+                                ),
+                                child: Visibility(
+                                  visible: (item?.image?.isNotEmpty ?? false),
+                                  child: Image.network(
+                                    ApiService.imageUrl + (item?.image ?? ''),
+                                    fit: BoxFit.fill,
                                   ),
                                 ),
                               ),
-                              child: Image.network(
-                                ApiService.imageUrl + (item?.image ?? ''),
-                                fit: BoxFit.fill,
+                              const SizedBox(
+                                width: 10,
                               ),
-                            ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    (item?.name ?? ''),
-                                    style:
-                                        AppFonts.regular.copyWith(fontSize: 16),
-                                  ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  Row(
-                                    children: [
-                                      SvgPicture.asset(
-                                        AppIcon.ratingIcon,
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      Text(
-                                        (item?.avgRating ?? ''),
-                                        style: AppFonts.regular.copyWith(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500),
-                                      ),
-                                      const SizedBox(
-                                        width: 20,
-                                      ),
-                                      Row(
-                                        children: [
-                                          SvgPicture.asset(
-                                            AppIcon.locationIcon,
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          Text(
-                                            (item?.distance ?? ''),
-                                            style: AppFonts.regular.copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500),
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  Row(
-                                    children: [
-                                      SvgPicture.asset(
-                                        AppIcon.locationIcon,
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          (item?.address ?? ''),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      (item?.name ?? ''),
+                                      style: AppFonts.regular
+                                          .copyWith(fontSize: 16),
+                                    ),
+                                    const SizedBox(
+                                      height: 5,
+                                    ),
+                                    Row(
+                                      children: [
+                                        SvgPicture.asset(
+                                          AppIcon.ratingIcon,
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Text(
+                                          (item?.avgRating ?? ''),
                                           style: AppFonts.regular.copyWith(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500),
                                         ),
-                                      )
-                                    ],
-                                  )
-                                ],
-                              ),
-                            )
-                          ],
+                                        const SizedBox(
+                                          width: 20,
+                                        ),
+                                        Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              AppIcon.locationIcon,
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Text(
+                                              (item?.distance ?? ''),
+                                              style: AppFonts.regular.copyWith(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 5,
+                                    ),
+                                    Row(
+                                      children: [
+                                        SvgPicture.asset(
+                                          AppIcon.locationIcon,
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            (item?.address ?? ''),
+                                            style: AppFonts.regular.copyWith(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                        )
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const SizedBox(
-                    height: 10,
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const SizedBox(
+                      height: 10,
+                    ),
                   ),
                 ),
               )
@@ -519,66 +482,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-/*  ProfileModal profileModal = ProfileModal();
-
-  Future<void> profileDetail(BuildContext context) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
-    var request = {};
-
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
-
-    var response = await http.post(
-        Uri.parse(
-          ApiService.profile,
-        ),
-        body: jsonEncode(request),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${sharedPreferences.getString("access_Token")}'
-        });
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, false);
-    }
-
-    Map<String, dynamic> jsonResponse = jsonDecode(
-      response.body,
-    );
-
-    if (jsonResponse['status'] == true) {
-      profileModal = ProfileModal.fromJson(jsonResponse);
-      sharedPreferences.setString('image', profileModal.data?.image ?? '');
-      sharedPreferences.setString('name', profileModal.data?.name ?? '');
-      sharedPreferences.setString('email', profileModal.data?.email ?? '');
-      sharedPreferences.setString('phone', profileModal.data?.phone ?? '');
-      sharedPreferences.setBool("profileSetUp", true);
-      Helper().showToast(
-        jsonResponse['message'],
-      );
-      Utility.progressLoadingDialog(context, false);
-
-      setState(() {});
-      if (context.mounted) {
-      } else {
-        Utility.progressLoadingDialog(context, false);
-
-        Helper().showToast(
-          jsonResponse['message'],
-        );
-      }
-    }
-  }*/
-
   HomePageModal homePageModal = HomePageModal();
 
   Future<void> homeDetail(BuildContext context) async {
@@ -587,9 +490,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (context.mounted) {
       Utility.progressLoadingDialog(context, true);
     }
+
+    if (latitude == null || longitude == null) {
+      await getLocation();
+    }
     var request = {};
-    request["latitude"] = latitude.toString();
-    request['longitude'] = longitude.toString();
+    request["latitude"] = latitude;
+    request['longitude'] = longitude;
     request["search"] = searchCn.text.trim();
 
     HttpWithMiddleware http = HttpWithMiddleware.build(
@@ -627,8 +534,6 @@ class _HomeScreenState extends State<HomeScreen> {
           'image', homePageModal.data?.userDetail?.image ?? '');
       sharedPreferences.setString(
           'name', homePageModal.data?.userDetail?.name ?? '');
-      sharedPreferences.setInt(
-          'shop_id', homePageModal.data?.shops!.first.id ?? 1);
 
       sharedPreferences.setBool("profileSetUp", true);
 

@@ -14,4 +14,8 @@ class ApiService {
   static const String socialLinks = '${baseUrl}social-links';
   static const String home = '${baseUrl}home';
   static const String shopDetail = '${baseUrl}shop-detail';
+  static const String shopServices = '${baseUrl}shop-services';
+  static const String shopWorkServices = '${baseUrl}shop-work-services';
+  static const String selectDate = '${baseUrl}select-date';
+  static const String chooseAvailability = '${baseUrl}choose-availability';
 }

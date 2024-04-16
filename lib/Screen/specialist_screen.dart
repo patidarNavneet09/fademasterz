@@ -1,3 +1,5 @@
+import 'package:fademasterz/ApiService/api_service.dart';
+import 'package:fademasterz/Modal/shop_detail_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:flutter/material.dart';
@@ -5,16 +7,20 @@ import 'package:flutter_svg/svg.dart';
 
 import '../Utils/app_assets.dart';
 import '../Utils/app_fonts.dart';
-import '../Utils/app_list.dart';
 
 class SpecialistScreen extends StatefulWidget {
-  const SpecialistScreen({super.key});
+  final List<OurSpecialist>? specialist;
+  const SpecialistScreen({
+    super.key,
+    this.specialist,
+  });
 
   @override
   State<SpecialistScreen> createState() => _SpecialistScreenState();
 }
 
 class _SpecialistScreenState extends State<SpecialistScreen> {
+  ShopDetailModal shopDetailModal = ShopDetailModal();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,35 +47,43 @@ class _SpecialistScreenState extends State<SpecialistScreen> {
           },
         ),
       ),
-      body: GridView.builder(
-        shrinkWrap: true,
-        itemCount: images.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-        ),
-        itemBuilder: (context, index) {
-          return InkWell(
-            onTap: () {},
-            child: Container(
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(shape: BoxShape.circle),
-              //  margin: const EdgeInsets.all(5),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        child: GridView.builder(
+          shrinkWrap: true,
+          itemCount: widget.specialist?.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 15,
+            childAspectRatio: 0.7,
+          ),
+          itemBuilder: (context, index) {
+            var specialist = widget.specialist?[index];
+
+            return InkWell(
+              onTap: () {},
               child: Column(
                 children: [
-                  Image.asset(
-                    images[index],
-                    height: 60,
-                    fit: BoxFit.fill,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(35),
+                    child: Image.network(
+                      ApiService.imageUrl + (specialist?.image ?? ''),
+                      height: 65,
+                      width: 65,
+                      fit: BoxFit.fill,
+                    ),
                   ),
                   Text(
-                    name[index],
+                    textAlign: TextAlign.center,
+                    (specialist?.name ?? ''),
                     style: AppFonts.normalText.copyWith(fontSize: 14),
                   )
                 ],
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

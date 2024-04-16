@@ -11,6 +11,7 @@ import 'package:fademasterz/Utils/app_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:maps_launcher/maps_launcher.dart';
 import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:readmore/readmore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,204 +41,31 @@ class _ShopDetailState extends State<ShopDetail> {
 
   @override
   void initState() {
-    shopDetail(context);
-    categories = [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: ReadMoreText(
-          (shopDetailModal.data?.about ?? ''),
-          trimMode: TrimMode.Line,
-          trimLines: 3,
-          trimLength: 200,
-          style: AppFonts.normalText.copyWith(fontSize: 14),
-          trimCollapsedText: 'Read more....',
-          isExpandable: true,
-          moreStyle: AppFonts.yellowFont,
-          lessStyle: AppFonts.yellowFont,
-          trimExpandedText: ' show less',
+    shopDetail(context).then(
+      (value) => categories = [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: ReadMoreText(
+            (shopDetailModal.data?.about ?? ''),
+            trimMode: TrimMode.Line,
+            trimLines: 3,
+            trimLength: 200,
+            style: AppFonts.normalText.copyWith(fontSize: 14),
+            trimCollapsedText: 'Read more....',
+            isExpandable: true,
+            moreStyle: AppFonts.yellowFont,
+            lessStyle: AppFonts.yellowFont,
+            trimExpandedText: ' show less',
+          ),
         ),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Text(
-                  AppStrings.services,
-                  style: AppFonts.regular.copyWith(fontSize: 16),
-                ),
-                const Spacer(),
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ServicesScreen1(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    AppStrings.seeAll,
-                    style: AppFonts.yellowFont,
-                  ),
-                )
-              ],
-            ),
-            const Divider(
-              color: AppColor.dividerColor,
-              height: 25,
-            ),
-            ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemCount:
-                  categoryServices.length < 4 ? categoryServices.length : 4,
-              itemBuilder: (context, index) {
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: AppColor.black,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      SvgPicture.asset(AppIcon.rightIcon),
-                      const SizedBox(
-                        width: 12,
-                      ),
-                      Text(
-                        categoryServices[index],
-                        style: AppFonts.appText.copyWith(fontSize: 14),
-                      )
-                    ],
-                  ),
-                );
-              },
-              separatorBuilder: (context, index) => const SizedBox(
-                height: 10,
-              ),
-            )
-          ],
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Text(
-                  AppStrings.gallery,
-                  style: AppFonts.regular.copyWith(fontSize: 16),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const GalleryScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    AppStrings.seeAll,
-                    style: AppFonts.yellowFont,
-                  ),
-                )
-              ],
-            ),
-            const Divider(
-              color: AppColor.dividerColor,
-              height: 25,
-            ),
-            GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              shrinkWrap: true,
-              itemCount: galley.length < 9 ? galley.length : 9,
-              itemBuilder: (BuildContext context, int index) {
-                return Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration:
-                      BoxDecoration(borderRadius: BorderRadius.circular(16)),
-                  child: GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return Dialog(
-                            backgroundColor: Colors.transparent,
-                            clipBehavior: Clip.antiAlias,
-                            child: Stack(children: [
-                              Image.asset(
-                                galley[index],
-                                //     images[index],
-
-                                fit: BoxFit.fill,
-                              ),
-                              Positioned(
-                                right: 0,
-                                child: SizedBox(
-                                  height: 21,
-                                  width: 21,
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                    },
-                                    child: SvgPicture.asset(AppIcon.cancelIcon),
-                                  ),
-                                ),
-                              )
-                            ]),
-                          );
-                        },
-                      );
-                    },
-                    child: Image.asset(
-                      galley[index],
-                      //     images[index],
-                      width: 103,
-                      height: 88,
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                );
-              },
-            )
-          ],
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 15,
-        ),
-        child: ListView.builder(
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: 4,
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return Row(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            children: [
+              Row(
                 children: [
-                  SvgPicture.asset(
-                    AppIcon.ratingIcon,
-                  ),
-                  const SizedBox(
-                    width: 5,
-                  ),
                   Text(
-                    '4.8 (3,2005 reviews)',
-                    //AppStrings.gallery,
+                    AppStrings.services,
                     style: AppFonts.regular.copyWith(fontSize: 16),
                   ),
                   const Spacer(),
@@ -246,74 +74,262 @@ class _ShopDetailState extends State<ShopDetail> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ReviewsScreen1(),
+                          builder: (context) => ServicesScreen(
+                            service: (shopDetailModal.data?.services),
+                          ),
                         ),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       AppStrings.seeAll,
                       style: AppFonts.yellowFont,
                     ),
                   )
                 ],
-              );
-            } else {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const Divider(
+                color: AppColor.dividerColor,
+                height: 25,
+              ),
+              ListView.separated(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: (shopDetailModal.data?.services?.length ?? 4) < 4
+                    ? (shopDetailModal.data?.services?.length ?? 4)
+                    : 4,
+                itemBuilder: (context, index) {
+                  var services = shopDetailModal.data?.services?[index];
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: AppColor.black,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(AppIcon.rightIcon),
+                        const SizedBox(
+                          width: 12,
+                        ),
+                        Text(
+                          (services?.name ?? ''),
+                          style: AppFonts.appText.copyWith(fontSize: 14),
+                        )
+                      ],
+                    ),
+                  );
+                },
+                separatorBuilder: (context, index) => const SizedBox(
+                  height: 10,
+                ),
+              )
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            children: [
+              Row(
                 children: [
-                  const Divider(
-                    color: AppColor.dividerColor,
-                    height: 25,
+                  Text(
+                    AppStrings.gallery,
+                    style: AppFonts.regular.copyWith(fontSize: 16),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        'Adam New',
-                        style: AppFonts.regular.copyWith(fontSize: 15),
-                      ),
-                      Spacer(),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColor.yellow,
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GalleryScreen(
+                            gallery: (shopDetailModal.data?.gallery),
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset(
-                              AppIcon.ratingIcon,
-                            ),
-                            SizedBox(
-                              width: 6,
-                            ),
-                            Text(
-                              '4',
-                              style: AppFonts.yellowFont,
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                  Text(
-                    'Lorem ipsum dolor sit amet consectetur. Vehicula vitae et senectus curabitur. Et facilisis diam vestibulum vel nibh massa lacus in morbi.',
-                    style: AppFonts.normalText.copyWith(fontSize: 14),
-                  ),
-                  Text(
-                    DateFormat('dd-MMM-yyyy').format(DateTime.now()).toString(),
-                    style: AppFonts.normalText
-                        .copyWith(fontSize: 13, color: Color(0xff989898)),
-                  ),
+                      );
+                    },
+                    child: const Text(
+                      AppStrings.seeAll,
+                      style: AppFonts.yellowFont,
+                    ),
+                  )
                 ],
-              );
-            }
-          },
+              ),
+              const Divider(
+                color: AppColor.dividerColor,
+                height: 25,
+              ),
+              GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                shrinkWrap: true,
+                itemCount: (shopDetailModal.data?.gallery?.length ?? 9) < 9
+                    ? (shopDetailModal.data?.gallery?.length ?? 9)
+                    : 9,
+                itemBuilder: (BuildContext context, int index) {
+                  var gallery = shopDetailModal.data?.gallery?[index];
+                  return Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration:
+                        BoxDecoration(borderRadius: BorderRadius.circular(16)),
+                    child: GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: Stack(children: [
+                                Image.network(
+                                  ApiService.imageUrl + (gallery?.image ?? ''),
+                                  //     images[index],
+
+                                  fit: BoxFit.fill,
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  child: SizedBox(
+                                    height: 21,
+                                    width: 21,
+                                    child: InkWell(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child:
+                                          SvgPicture.asset(AppIcon.cancelIcon),
+                                    ),
+                                  ),
+                                )
+                              ]),
+                            );
+                          },
+                        );
+                      },
+                      child: Image.network(
+                        ApiService.imageUrl + (gallery?.image ?? ''),
+                        //     images[index],
+                        width: 103,
+                        height: 88,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  );
+                },
+              )
+            ],
+          ),
         ),
-      ),
-    ];
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 15,
+          ),
+          child: ListView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: (shopDetailModal.data?.review?.length ?? 3) > 3
+                ? (shopDetailModal.data?.review?.length)
+                : 3,
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Row(
+                  children: [
+                    SvgPicture.asset(
+                      AppIcon.ratingIcon,
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Text(
+                      (shopDetailModal.data?.avgRating ?? ''),
+                      //AppStrings.gallery,
+                      style: AppFonts.regular.copyWith(fontSize: 16),
+                    ),
+                    const Spacer(),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReviewsScreen1(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        AppStrings.seeAll,
+                        style: AppFonts.yellowFont,
+                      ),
+                    )
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(
+                      color: AppColor.dividerColor,
+                      height: 25,
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'Adam New',
+                          style: AppFonts.regular.copyWith(fontSize: 15),
+                        ),
+                        Spacer(),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColor.yellow,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              SvgPicture.asset(
+                                AppIcon.ratingIcon,
+                              ),
+                              SizedBox(
+                                width: 6,
+                              ),
+                              Text(
+                                (shopDetailModal.data?.avgRating ?? ''),
+                                style: AppFonts.yellowFont,
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                    Text(
+                      'Lorem ipsum dolor sit amet consectetur. Vehicula vitae et senectus curabitur. Et facilisis diam vestibulum vel nibh massa lacus in morbi.',
+                      style: AppFonts.normalText.copyWith(fontSize: 14),
+                    ),
+                    Text(
+                      DateFormat('dd-MMM-yyyy')
+                          .format(DateTime.now())
+                          .toString(),
+                      style: AppFonts.normalText
+                          .copyWith(fontSize: 13, color: Color(0xff989898)),
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
+        ),
+      ],
+    );
+
     setState(() {});
     super.initState();
   }
@@ -326,14 +342,17 @@ class _ShopDetailState extends State<ShopDetail> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 250,
+            //height: 250,
             child: Stack(
               children: [
-                Image.network(
-                  ApiService.imageUrl + (shopDetailModal.data?.image ?? ''),
-                  fit: BoxFit.fill,
-                  height: 300,
-                  width: MediaQuery.of(context).size.width,
+                Visibility(
+                  visible: (shopDetailModal.data?.image?.isNotEmpty ?? false),
+                  child: Image.network(
+                    ApiService.imageUrl + (shopDetailModal.data?.image ?? ''),
+                    fit: BoxFit.fill,
+                    height: 300,
+                    width: MediaQuery.of(context).size.width,
+                  ),
                 ),
                 Positioned(
                   left: 15,
@@ -385,10 +404,14 @@ class _ShopDetailState extends State<ShopDetail> {
                         const SizedBox(
                           width: 10,
                         ),
-                        Text(
-                          shopDetailModal.data?.address ?? '',
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 15, fontWeight: FontWeight.w500),
+                        Expanded(
+                          child: Text(
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            shopDetailModal.data?.address ?? '',
+                            style: AppFonts.regular.copyWith(
+                                fontSize: 15, fontWeight: FontWeight.w500),
+                          ),
                         ),
                       ],
                     ),
@@ -447,17 +470,26 @@ class _ShopDetailState extends State<ShopDetail> {
                             )
                           ],
                         ),
-                        Column(
-                          children: [
-                            SvgPicture.asset(AppIcon.directionIcon),
-                            const SizedBox(
-                              height: 6,
-                            ),
-                            Text(
-                              AppStrings.direction,
-                              style: AppFonts.regular.copyWith(fontSize: 15),
-                            )
-                          ],
+                        InkWell(
+                          onTap: () {
+                            MapsLauncher.launchCoordinates(
+                                double.parse(
+                                    shopDetailModal.data!.lat.toString()),
+                                double.parse(
+                                    shopDetailModal.data!.lng.toString()));
+                          },
+                          child: Column(
+                            children: [
+                              SvgPicture.asset(AppIcon.directionIcon),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Text(
+                                AppStrings.direction,
+                                style: AppFonts.regular.copyWith(fontSize: 15),
+                              )
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -484,14 +516,18 @@ class _ShopDetailState extends State<ShopDetail> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SpecialistScreen(),
+                                builder: (context) => SpecialistScreen(
+                                    specialist:
+                                        (shopDetailModal.data!.ourSpecialist)),
                               ),
                             );
                             setState(() {});
                           },
                           child: Text(
                             AppStrings.seeAll,
-                            style: AppFonts.yellowFont.copyWith(fontSize: 16),
+                            style: AppFonts.yellowFont.copyWith(
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ],
@@ -507,12 +543,12 @@ class _ShopDetailState extends State<ShopDetail> {
                       scrollDirection: Axis.horizontal,
                       itemCount:
                           (shopDetailModal.data?.ourSpecialist!.length ?? 0) > 5
-                              ? 7
+                              ? 5
                               : (shopDetailModal.data?.ourSpecialist!.length ??
                                   0),
                       addSemanticIndexes: true,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 5),
                       itemBuilder: (BuildContext context, int index) {
                         var specialist =
                             shopDetailModal.data?.ourSpecialist?[index];
@@ -604,7 +640,7 @@ class _ShopDetailState extends State<ShopDetail> {
                   const SizedBox(
                     height: 15,
                   ),
-                  categories[selectIndex1],
+                  if (categories.isNotEmpty) categories[selectIndex1],
                 ],
               ),
             ),
@@ -628,7 +664,6 @@ class _ShopDetailState extends State<ShopDetail> {
   }
 
   ShopDetailModal shopDetailModal = ShopDetailModal();
-  var shop;
   Future<void> shopDetail(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -667,10 +702,8 @@ class _ShopDetailState extends State<ShopDetail> {
     Helper().showToast(
       jsonResponse['message'],
     );
-
     if (jsonResponse['status'] == true) {
       shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
-      shop = shopDetailModal;
       setState(() {});
     }
   }

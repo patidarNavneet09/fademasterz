@@ -1,10 +1,11 @@
+import 'package:fademasterz/Modal/shop_detail_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../ApiService/api_service.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_fonts.dart';
-import '../Utils/app_list.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_bar.dart';
 
@@ -89,7 +90,8 @@ import '../Utils/custom_app_bar.dart';
 // }
 
 class GalleryScreen extends StatefulWidget {
-  const GalleryScreen({super.key});
+  final List<Gallery>? gallery;
+  const GalleryScreen({super.key, required this.gallery});
 
   @override
   State<GalleryScreen> createState() => _GalleryScreenState();
@@ -133,7 +135,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   mainAxisSpacing: 10,
                 ),
                 shrinkWrap: true,
-                itemCount: galley.length,
+                itemCount: widget.gallery?.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Container(
                     clipBehavior: Clip.antiAlias,
@@ -146,10 +148,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           builder: (context) {
                             return Dialog(
                               backgroundColor: Colors.transparent,
-                              clipBehavior: Clip.antiAlias,
                               child: Stack(children: [
-                                Image.asset(
-                                  galley[index],
+                                Image.network(
+                                  ApiService.imageUrl +
+                                      (widget.gallery?[index].image ?? ''),
                                   //     images[index],
 
                                   //fit: BoxFit.fill,
@@ -173,8 +175,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           },
                         );
                       },
-                      child: Image.asset(
-                        galley[index],
+                      child: Image.network(
+                        ApiService.imageUrl +
+                            (widget.gallery?[index].image ?? ''),
                         //     images[index],
                         width: 103,
                         height: 104,
