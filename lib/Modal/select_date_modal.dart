@@ -38,6 +38,11 @@ class SelectDateResponse {
             ? []
             : List<dynamic>.from(data!.map((x) => x.toJson())),
       };
+
+  @override
+  String toString() {
+    return 'SelectDateResponse{status: $status, message: $message, data: $data}';
+  }
 }
 
 class SelectDateData {
@@ -62,4 +67,9 @@ class SelectDateData {
         "name": name,
         "image": image,
       };
+
+  @override
+  String toString() {
+    return 'SelectDateData{id: $id, name: $name, image: $image}';
+  }
 }

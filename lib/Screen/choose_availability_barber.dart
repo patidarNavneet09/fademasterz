@@ -1,12 +1,17 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fademasterz/Modal/choose_availiabilty_modal.dart';
+import 'package:fademasterz/Modal/select_date_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:fademasterz/Utils/custom_textfield.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -14,14 +19,15 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../Utils/app_fonts.dart';
 import '../../Utils/app_string.dart';
 import '../ApiService/api_service.dart';
+import '../Modal/select_specialist_modal.dart';
 import '../Utils/app_assets.dart';
-import '../Utils/app_list.dart';
 import '../Utils/helper.dart';
 import '../Utils/utility.dart';
 import 'booking_summary_screen.dart';
 
 class ChooseAvailabilityBarber extends StatefulWidget {
   final String? price;
+
   const ChooseAvailabilityBarber({super.key, this.price});
 
   @override
@@ -35,22 +41,84 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
 
   TextEditingController noteCn = TextEditingController();
   String _selectedDate = '';
-  String _dateCount = '';
-  String _range = '';
-  String _rangeCount = '';
+  int? specialist_id;
 
   /// The method for [DateRangePickerSelectionChanged] callback, which will be
   /// called whenever a selection changed on the date picker widget.
   void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
     setState(() {
       _selectedDate = args.value.toString();
-      debugPrint('>>>>>>>>>>>>>>${_selectedDate}<<<<<<<<<<<<<<');
+      _selectDateApi(context);
+      // debugPrint(
+      //     '>>>>>>>>>>>>>>${DateFormat('EEEE').format(DateTime.parse(_selectedDate)).toLowerCase()}<<<<<<<<<<<<<<');
+      // debugPrint(
+      //     '>>>>>>>>>>>>>>${DateFormat('yyyy-MM-dd').format(DateTime.parse(_selectedDate)).toLowerCase()}<<<<<<<<<<<<<<');
     });
+  }
+
+  final picker = ImagePicker();
+  File? _imageFile;
+
+  Future getImageFromGallery() async {
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
+    setState(() {
+      if (pickedFile != null) {
+        _imageFile = File(pickedFile.path);
+      }
+    });
+  }
+
+  Future getImageFromCamera() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    setState(() {
+      if (pickedFile != null) {
+        _imageFile = File(pickedFile.path);
+      }
+    });
+  }
+
+  Future showOptions() async {
+    showCupertinoModalPopup(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            child: const Text('Photo Gallery'),
+            onPressed: () {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from gallery
+              getImageFromGallery();
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: const Text('Camera'),
+            onPressed: () {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from camera
+              getImageFromCamera();
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: const Text('Cancel'),
+            onPressed: () {
+              // close the options modal
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void initState() {
     _chooseAvailabilityApi(context);
+
     super.initState();
   }
 
@@ -81,12 +149,15 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SfDateRangePicker(
-                view: DateRangePickerView.month,
+                //    view: DateRangePickerView.month,
+                onSubmit: (p0) => _onSelectionChanged,
                 onSelectionChanged: _onSelectionChanged,
                 selectionMode: DateRangePickerSelectionMode.single,
                 backgroundColor: AppColor.black,
+                enablePastDates: false,
                 initialDisplayDate: DateTime.now(),
                 monthViewSettings: const DateRangePickerMonthViewSettings(
                   dayFormat: 'EEE',
@@ -94,16 +165,23 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                     textStyle: AppFonts.appText,
                   ),
                   viewHeaderStyle: DateRangePickerViewHeaderStyle(
-                      textStyle: AppFonts.normalText),
+                    textStyle: AppFonts.normalText,
+                  ),
                 ),
-                monthCellStyle: const DateRangePickerMonthCellStyle(
-                  textStyle: AppFonts.normalText,
-                  cellDecoration: BoxDecoration(),
-                  todayTextStyle: AppFonts.appText,
-                  weekendTextStyle: AppFonts.yellowFont,
-                  blackoutDatesDecoration: BoxDecoration(),
-                ),
+                monthCellStyle: DateRangePickerMonthCellStyle(
+                    textStyle: AppFonts.normalText,
+                    todayTextStyle: AppFonts.appText,
+                    weekendTextStyle: AppFonts.yellowFont,
+                    blackoutDatesDecoration: const BoxDecoration(),
+                    leadingDatesTextStyle: AppFonts.normalText,
+                    disabledDatesTextStyle:
+                        AppFonts.normalText.copyWith(color: AppColor.gray),
+                    trailingDatesTextStyle: AppFonts.appText),
                 showNavigationArrow: true,
+                yearCellStyle: const DateRangePickerYearCellStyle(
+                  disabledDatesTextStyle: AppFonts.appText,
+                  leadingDatesTextStyle: AppFonts.appText,
+                ),
                 todayHighlightColor: AppColor.yellow,
                 headerStyle: const DateRangePickerHeaderStyle(
                   backgroundColor: AppColor.yellow,
@@ -116,6 +194,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                 height: 10,
               ),
               Container(
+                width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(9),
                   color: AppColor.black,
@@ -133,59 +212,90 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                     ),
                     SizedBox(
                       height: 110,
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: images1.length,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 11, vertical: 5),
-                        itemBuilder: (BuildContext context, int index) {
-                          return InkWell(
-                            onTap: () {
-                              selectIndex = index;
-                              setState(
-                                () {},
-                              );
-                            },
-                            child: Row(
-                              children: [
-                                Column(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          width: 3,
-                                          color: selectIndex == index
-                                              ? AppColor.yellow
-                                              : Colors.transparent,
+                      child: Visibility(
+                        visible: (selectDateResponse.data?.isNotEmpty ?? false),
+                        replacement: Center(
+                          child: Text(
+                            'No Specialist Found',
+                            style: AppFonts.appText.copyWith(
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          itemCount: (selectDateResponse.data?.length ?? 0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 11, vertical: 5),
+                          itemBuilder: (BuildContext context, int index) {
+                            var specialist = selectDateResponse.data?[index];
+                            return InkWell(
+                              onTap: () async {
+                                selectIndex = index;
+
+                                SharedPreferences sharedPreferences =
+                                    await SharedPreferences.getInstance();
+                                // sharedPreferences.setInt(
+                                //   'specialist_id',
+                                //   (specialist?.id ?? 0),
+                                // );
+                                specialist_id = (specialist?.id ?? 0);
+                                await _selectSpecialistTimeApi(context);
+
+                                setState(
+                                  () {},
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  Column(
+                                    children: [
+                                      Container(
+                                        //  clipBehavior: Clip.antiAlias,
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            width: 3,
+                                            color: selectIndex == index
+                                                ? AppColor.yellow
+                                                : Colors.transparent,
+                                          ),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(30),
+                                          child: Image.network(
+                                            ApiService.imageUrl +
+                                                (specialist?.image ?? ''),
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.fill,
+                                          ),
                                         ),
                                       ),
-                                      child: Image.asset(
-                                        images1[index],
-                                        height: 60,
-                                        fit: BoxFit.fill,
+                                      Text(
+                                        textAlign: TextAlign.center,
+                                        (specialist?.name ?? ''),
+                                        style: AppFonts.yellowFont.copyWith(
+                                          color: selectIndex == index
+                                              ? null
+                                              : AppColor.white,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      name1[index],
-                                      style: selectIndex == index
-                                          ? AppFonts.yellowFont
-                                          : AppFonts.normalText.copyWith(
-                                              fontSize: 14,
-                                            ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        separatorBuilder: (BuildContext context, int index) {
-                          return const SizedBox(
-                            width: 15,
-                          );
-                        },
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          separatorBuilder: (BuildContext context, int index) {
+                            return const SizedBox(
+                              width: 15,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],
@@ -195,11 +305,12 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                 height: 15,
               ),
               Container(
+                width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(9),
                   color: AppColor.black,
                 ),
-                padding: EdgeInsets.only(bottom: 9),
+                padding: const EdgeInsets.only(bottom: 9),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -213,49 +324,64 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                     ),
                     SizedBox(
                       height: 35,
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: timeSelect.length,
-                        addSemanticIndexes: true,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 15,
-                        ),
-                        itemBuilder: (BuildContext context, int index) {
-                          return InkWell(
-                            onTap: () {
-                              timeSelectIndex = index;
-
-                              setState(
-                                () {},
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                              ),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: timeSelectIndex == index
-                                    ? AppColor.yellow
-                                    : Colors.transparent,
-                                border: Border.all(color: AppColor.yellow),
-                                borderRadius: BorderRadius.circular(19),
-                              ),
-                              //  margin: const EdgeInsets.all(5),
-                              child: Text(timeSelect[index],
-                                  style: timeSelectIndex == index
-                                      ? AppFonts.text.copyWith(
-                                          color: AppColor.black1, fontSize: 14)
-                                      : AppFonts.yellowFont),
+                      child: Visibility(
+                        visible: (selectSpecialistResponse.data?.isNotEmpty ??
+                            false),
+                        replacement: Center(
+                          child: Text(
+                            'No TimeSlot Found',
+                            style: AppFonts.appText.copyWith(
+                              fontSize: 14,
                             ),
-                          );
-                        },
-                        separatorBuilder: (BuildContext context, int index) {
-                          return const SizedBox(
-                            width: 15,
-                          );
-                        },
+                          ),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          itemCount:
+                              (selectSpecialistResponse.data?.length ?? 0),
+                          addSemanticIndexes: true,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                          ),
+                          itemBuilder: (BuildContext context, int index) {
+                            var timeSlot =
+                                selectSpecialistResponse.data?[index];
+                            return InkWell(
+                              onTap: () {
+                                timeSelectIndex = index;
+
+                                setState(
+                                  () {},
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: timeSelectIndex == index
+                                      ? AppColor.yellow
+                                      : Colors.transparent,
+                                  border: Border.all(color: AppColor.yellow),
+                                  borderRadius: BorderRadius.circular(19),
+                                ),
+                                //  margin: const EdgeInsets.all(5),
+                                child: Text((timeSlot?.time ?? ''),
+                                    style: AppFonts.yellowFont.copyWith(
+                                        color: timeSelectIndex == index
+                                            ? AppColor.black1
+                                            : null)),
+                              ),
+                            );
+                          },
+                          separatorBuilder: (BuildContext context, int index) {
+                            return const SizedBox(
+                              width: 15,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],
@@ -299,15 +425,20 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                       child: DottedBorder(
                         borderType: BorderType.RRect,
                         color: AppColor.yellow,
-                        dashPattern: [5, 2],
+                        dashPattern: const [5, 2],
                         strokeWidth: 2,
-                        radius: Radius.circular(5),
+                        radius: const Radius.circular(5),
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              SvgPicture.asset(AppIcon.cameraIcon1),
-                              Text(
+                              InkWell(
+                                onTap: () {
+                                  showOptions();
+                                },
+                                child: SvgPicture.asset(AppIcon.cameraIcon1),
+                              ),
+                              const Text(
                                 AppStrings.uploadImage,
                                 style: AppFonts.yellowFont,
                               )
@@ -341,7 +472,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                           style: AppFonts.regular.copyWith(fontSize: 16),
                         ),
                         const Spacer(),
-                        Text(
+                        const Text(
                           AppStrings.optional,
                           style: AppFonts.yellowFont,
                         ),
@@ -409,6 +540,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
 
   ChooseAvailabilityResponse chooseAvailabilityResponse =
       ChooseAvailabilityResponse();
+
   Future<void> _chooseAvailabilityApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -446,10 +578,135 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
       jsonResponse['message'],
     );
     if (jsonResponse['status'] == true) {
-      chooseAvailabilityResponse = ChooseAvailabilityResponse.fromJson(
-          jsonResponse); //.fromJson(jsonResponse);
-      debugPrint(
-          '>>>>>>>>>>>>>>${chooseAvailabilityResponse.data?.availableSpecialist?.first.name}<<<<<<<<<<<<<<');
+      chooseAvailabilityResponse =
+          ChooseAvailabilityResponse.fromJson(jsonResponse);
+
+      setState(() {});
+      _selectDateApi(context);
+    }
+  }
+
+  SelectDateResponse selectDateResponse = SelectDateResponse();
+
+  Future<void> _selectDateApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+    request["shop_id"] = sharedPreferences.getInt('shop_id');
+    request["selected_date"] = DateFormat('yyyy-MM-dd')
+        .format(
+          DateTime.parse(
+            _selectedDate.isNotEmpty
+                ? _selectedDate.toString()
+                : DateTime.now().toString(),
+          ),
+        )
+        .toLowerCase();
+    request["selected_day"] = DateFormat('EEEE')
+        .format(DateTime.parse(
+          _selectedDate.isNotEmpty
+              ? _selectedDate.toString()
+              : DateTime.now().toString(),
+        ))
+        .toLowerCase();
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.selectDate,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    Helper().showToast(
+      jsonResponse['message'],
+    );
+    if (jsonResponse['status'] == true) {
+      selectDateResponse = SelectDateResponse.fromJson(jsonResponse);
+
+      setState(() {});
+
+      if (selectDateResponse.data?.isNotEmpty ?? false) {
+        _selectSpecialistTimeApi(context);
+      }
+    }
+  }
+
+  SelectSpecialistResponse selectSpecialistResponse =
+      SelectSpecialistResponse();
+
+  Future<void> _selectSpecialistTimeApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
+
+    debugPrint(
+        '>>>>>specialist_id>>>>>>>>>${selectDateResponse.data?[selectIndex].id}<<<<<<<<<<<<<<');
+    request["shop_id"] = sharedPreferences.getInt('shop_id');
+    request["specialist_id"] = selectDateResponse.data?[selectIndex].id ??
+        specialist_id; //sharedPreferences.getInt('specialist_id');
+    request["selected_date"] = DateFormat('yyyy-MM-dd')
+        .format(
+          DateTime.parse(
+            _selectedDate.isNotEmpty
+                ? _selectedDate.toString()
+                : DateTime.now().toString(),
+          ),
+        )
+        .toLowerCase();
+    HttpWithMiddleware http = HttpWithMiddleware.build(
+      middlewares: [
+        HttpLogger(logLevel: LogLevel.BODY),
+      ],
+    );
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.selectSpecialist,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    Helper().showToast(
+      jsonResponse['message'],
+    );
+    if (jsonResponse['status'] == true) {
+      selectSpecialistResponse =
+          SelectSpecialistResponse.fromJson(jsonResponse);
 
       setState(() {});
     }

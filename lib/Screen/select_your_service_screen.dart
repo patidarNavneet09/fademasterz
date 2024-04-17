@@ -26,7 +26,7 @@ class SelectYourServices extends StatefulWidget {
 
 class _SelectYourServicesState extends State<SelectYourServices> {
   int selectIndex = 0;
-
+  int? shopWorkServiceId;
   @override
   void initState() {
     shopWorkService(context);
@@ -65,7 +65,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
             child: ListView.separated(
               shrinkWrap: true,
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               itemCount: (shopWorkServiceModal.data?.length ?? 0),
               itemBuilder: (BuildContext context, int index) {
                 var shopService = shopWorkServiceModal.data?[index];
@@ -74,10 +74,8 @@ class _SelectYourServicesState extends State<SelectYourServices> {
                   onTap: () async {
                     SharedPreferences sharedPreferences =
                         await SharedPreferences.getInstance();
-                    sharedPreferences.setInt(
-                      'shopWorkServiceId',
-                      (shopService?.id?.toInt() ?? 0),
-                    );
+
+                    shopWorkServiceId = (shopService?.id?.toInt() ?? 0);
 
                     selectIndex = index;
                     _shopService(context);
@@ -112,69 +110,81 @@ class _SelectYourServicesState extends State<SelectYourServices> {
             ),
           ),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              itemCount: (shopServiceModal.data?.length ?? 0),
-              shrinkWrap: true,
-              itemBuilder: (context, index) {
-                var shopService = shopServiceModal.data?[index];
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: AppColor.black),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            (shopService?.name ?? ''),
-                            style: AppFonts.appText.copyWith(fontSize: 14),
-                          ),
-                          Text(
-                            (shopService?.duration ?? ''),
-                            style: AppFonts.normalText,
-                          ),
-                          const SizedBox(
-                            height: 4,
-                          ),
-                          Text(
-                            '\$${shopService?.price //.toStringAsFixed(0),
-                            }',
-                            style: AppFonts.appText.copyWith(
-                                fontWeight: FontWeight.w600, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      InkWell(
-                        onTap: () {
-                          onItemAddRemove(shopService);
-                          setState(() {});
-                        },
-                        child: !(shopService?.selected ?? false)
-                            ? SvgPicture.asset(
-                                AppIcon.addIcon,
-                                height: 25,
-                                width: 25,
-                                fit: BoxFit.fill,
-                              )
-                            : SvgPicture.asset(
-                                AppIcon.removeIcon,
-                                height: 25,
-                                width: 25,
-                                fit: BoxFit.fill,
-                              ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              separatorBuilder: (BuildContext context, int index) =>
-                  const SizedBox(
-                height: 10,
+            child: Visibility(
+              visible: (shopServiceModal.data?.isNotEmpty ?? false),
+              replacement: Center(
+                child: Text(
+                  'No Service Available',
+                  style: AppFonts.appText.copyWith(fontSize: 14),
+                ),
+              ),
+              child: ListView.separated(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                itemCount: (shopServiceModal.data?.length ?? 0),
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  var shopService = shopServiceModal.data?[index];
+
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: AppColor.black),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              (shopService?.name ?? ''),
+                              style: AppFonts.appText.copyWith(fontSize: 14),
+                            ),
+                            Text(
+                              (shopService?.duration ?? ''),
+                              style: AppFonts.normalText,
+                            ),
+                            const SizedBox(
+                              height: 4,
+                            ),
+                            Text(
+                              '\$${shopService?.price //.toStringAsFixed(0),
+                              }',
+                              style: AppFonts.appText.copyWith(
+                                  fontWeight: FontWeight.w600, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        InkWell(
+                          onTap: () {
+                            onItemAddRemove(shopService);
+
+                            setState(() {});
+                          },
+                          child: !(shopService?.selected ?? false)
+                              ? SvgPicture.asset(
+                                  AppIcon.addIcon,
+                                  height: 25,
+                                  width: 25,
+                                  fit: BoxFit.fill,
+                                )
+                              : SvgPicture.asset(
+                                  AppIcon.removeIcon,
+                                  height: 25,
+                                  width: 25,
+                                  fit: BoxFit.fill,
+                                ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) =>
+                    const SizedBox(
+                  height: 10,
+                ),
               ),
             ),
           ),
@@ -301,7 +311,8 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     var request = {};
 
     request["shop_id"] = sharedPreferences.getInt('shop_id');
-    request["work_service_id"] = sharedPreferences.getInt('shopWorkServiceId');
+    request["work_service_id"] =
+        shopWorkServiceId; //sharedPreferences.getInt('shopWorkServiceId');
 
     HttpWithMiddleware http = HttpWithMiddleware.build(
       middlewares: [

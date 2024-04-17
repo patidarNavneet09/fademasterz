@@ -126,66 +126,75 @@ class _GalleryScreenState extends State<GalleryScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             children: [
-              GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
+              Visibility(
+                visible: (widget.gallery?.isNotEmpty ?? false),
+                replacement: Center(
+                  child: Text(
+                    'No Gallery Image',
+                    style: AppFonts.appText.copyWith(fontSize: 14),
+                  ),
                 ),
-                shrinkWrap: true,
-                itemCount: widget.gallery?.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration:
-                        BoxDecoration(borderRadius: BorderRadius.circular(16)),
-                    child: GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return Dialog(
-                              backgroundColor: Colors.transparent,
-                              child: Stack(children: [
-                                Image.network(
-                                  ApiService.imageUrl +
-                                      (widget.gallery?[index].image ?? ''),
-                                  //     images[index],
+                child: GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  shrinkWrap: true,
+                  itemCount: widget.gallery?.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16)),
+                      child: GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return Dialog(
+                                backgroundColor: Colors.transparent,
+                                child: Stack(children: [
+                                  Image.network(
+                                    ApiService.imageUrl +
+                                        (widget.gallery?[index].image ?? ''),
+                                    //     images[index],
 
-                                  //fit: BoxFit.fill,
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  child: SizedBox(
-                                    height: 21,
-                                    width: 21,
-                                    child: InkWell(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child:
-                                          SvgPicture.asset(AppIcon.cancelIcon),
-                                    ),
+                                    //fit: BoxFit.fill,
                                   ),
-                                )
-                              ]),
-                            );
-                          },
-                        );
-                      },
-                      child: Image.network(
-                        ApiService.imageUrl +
-                            (widget.gallery?[index].image ?? ''),
-                        //     images[index],
-                        width: 103,
-                        height: 104,
-                        fit: BoxFit.fill,
+                                  Positioned(
+                                    right: 0,
+                                    child: SizedBox(
+                                      height: 21,
+                                      width: 21,
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: SvgPicture.asset(
+                                            AppIcon.cancelIcon),
+                                      ),
+                                    ),
+                                  )
+                                ]),
+                              );
+                            },
+                          );
+                        },
+                        child: Image.network(
+                          ApiService.imageUrl +
+                              (widget.gallery?[index].image ?? ''),
+                          //     images[index],
+                          width: 103,
+                          height: 104,
+                          fit: BoxFit.fill,
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               )
             ],
           ),

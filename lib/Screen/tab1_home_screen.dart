@@ -84,8 +84,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   MyAppButton(
                     onPress: () async {
-                      await Geolocator.openLocationSettings();
-                      await getLocation();
+                      // await Geolocator.openLocationSettings();
+                      //   await getLocation();
+                      await getLetLongPosition();
+                      //homeDetail(context);
                       Navigator.of(ctx).pop();
                     },
                     height: 48,
@@ -123,18 +125,20 @@ class _HomeScreenState extends State<HomeScreen> {
   double? longitude;
   late LocationPermission permission;
 
-  Future<void> getLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      latitude = position.latitude;
-      longitude = position.longitude;
-
-      setState(() {});
-    } catch (e) {
-      Helper().showToast(e.toString());
-    }
-  }
+  // Future<void> getLocation() async {
+  //   try {
+  //     Position position = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.high);
+  //     latitude = position.latitude;
+  //     longitude = position.longitude;
+  //
+  //     debugPrint('>>>>>>>>>>>>>>${latitude}<<<<<<<<<<<<<<');
+  //     debugPrint('>>>>>>>>>>>>>>${longitude}<<<<<<<<<<<<<<');
+  //     setState(() {});
+  //   } catch (e) {
+  //     Helper().showToast(e.toString());
+  //   }
+  // }
 
   // late LocationPermission permission;
 
@@ -163,6 +167,8 @@ class _HomeScreenState extends State<HomeScreen> {
         desiredAccuracy: LocationAccuracy.high);
     longitude = position.longitude;
     latitude = position.latitude;
+    debugPrint('>>>>>>>>>>>>>>${latitude}<<<<<<<<<<<<<<');
+    debugPrint('>>>>>>>>>>>>>>${longitude}<<<<<<<<<<<<<<');
   }
 
   @override
@@ -319,19 +325,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 15,
               ),
               Text(
-                '${homePageModal.data?.totalShops} Shop available',
+                '${(homePageModal.data?.totalShops ?? '')} Shop available',
                 style: AppFonts.text.copyWith(
                   fontSize: 16,
                   color: AppColor.yellow,
                 ),
               ),
               Visibility(
-                // visible:
-                // replacement: Text(
-                //   'No Shop Found',
-                //   textAlign: TextAlign.center,
-                //   style: AppFonts.appText,
-                // ),
+                visible: (homePageModal.data?.shops?.isNotEmpty ?? false),
+                replacement: Center(
+                  child: Text(
+                    'No Shop Found',
+                    textAlign: TextAlign.center,
+                    style: AppFonts.appText.copyWith(fontSize: 14),
+                  ),
+                ),
                 child: Expanded(
                   child: ListView.separated(
                     // physics: const NeverScrollableScrollPhysics(),
@@ -492,7 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (latitude == null || longitude == null) {
-      await getLocation();
+      await getLetLongPosition();
     }
     var request = {};
     request["latitude"] = latitude;

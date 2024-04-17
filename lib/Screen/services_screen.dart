@@ -45,38 +45,47 @@ class _ServicesScreenState extends State<ServicesScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             children: [
-              ListView.separated(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: widget.service!.length,
-                itemBuilder: (context, index) {
-                  return InkWell(
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: AppColor.black,
-                        borderRadius: BorderRadius.circular(8),
+              Visibility(
+                visible: (widget.service?.isNotEmpty ?? false),
+                replacement: Center(
+                  child: Text(
+                    'No Services ',
+                    style: AppFonts.appText.copyWith(fontSize: 14),
+                  ),
+                ),
+                child: ListView.separated(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: widget.service!.length,
+                  itemBuilder: (context, index) {
+                    return InkWell(
+                      onTap: () {},
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppColor.black,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            SvgPicture.asset(AppIcon.rightIcon),
+                            const SizedBox(
+                              width: 12,
+                            ),
+                            Text(
+                              (widget.service?[index].name ?? ''),
+                              style: AppFonts.appText.copyWith(fontSize: 14),
+                            )
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          SvgPicture.asset(AppIcon.rightIcon),
-                          const SizedBox(
-                            width: 12,
-                          ),
-                          Text(
-                            (widget.service?[index].name ?? ''),
-                            style: AppFonts.appText.copyWith(fontSize: 14),
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                separatorBuilder: (context, index) => const SizedBox(
-                  height: 10,
+                    );
+                  },
+                  separatorBuilder: (context, index) => const SizedBox(
+                    height: 10,
+                  ),
                 ),
               )
             ],

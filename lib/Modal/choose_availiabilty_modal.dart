@@ -96,6 +96,11 @@ class AvailableSpecialist {
         "name": name,
         "image": image,
       };
+
+  @override
+  String toString() {
+    return 'AvailableSpecialist{id: $id, name: $name, image: $image}';
+  }
 }
 
 class Slot {
@@ -116,4 +121,9 @@ class Slot {
         "id": id,
         "time": time,
       };
+
+  @override
+  String toString() {
+    return 'Slot{id: $id, time: $time}';
+  }
 }
