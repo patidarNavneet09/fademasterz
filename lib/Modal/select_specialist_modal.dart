@@ -4,25 +4,25 @@
 
 import 'dart:convert';
 
-SelectSpecialistResponse selectSpecialistResponseFromJson(String str) =>
-    SelectSpecialistResponse.fromJson(json.decode(str));
+SelectSpecialistTimeResponse selectSpecialistResponseFromJson(String str) =>
+    SelectSpecialistTimeResponse.fromJson(json.decode(str));
 
-String selectSpecialistResponseToJson(SelectSpecialistResponse data) =>
+String selectSpecialistResponseToJson(SelectSpecialistTimeResponse data) =>
     json.encode(data.toJson());
 
-class SelectSpecialistResponse {
+class SelectSpecialistTimeResponse {
   bool? status;
   String? message;
   List<SpecialistTimeData>? data;
 
-  SelectSpecialistResponse({
+  SelectSpecialistTimeResponse({
     this.status,
     this.message,
     this.data,
   });
 
-  factory SelectSpecialistResponse.fromJson(Map<String, dynamic> json) =>
-      SelectSpecialistResponse(
+  factory SelectSpecialistTimeResponse.fromJson(Map<String, dynamic> json) =>
+      SelectSpecialistTimeResponse(
         status: json["status"],
         message: json["message"],
         data: json["data"] == null

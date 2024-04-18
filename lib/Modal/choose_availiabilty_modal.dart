@@ -10,12 +10,6 @@ ChooseAvailabilityResponse chooseAvailabilityResponseFromJson(String str) =>
 String chooseAvailabilityResponseToJson(ChooseAvailabilityResponse data) =>
     json.encode(data.toJson());
 
-ChooseAvailabilityData chooseAvailabilityDataFromJson(String str) =>
-    ChooseAvailabilityData.fromJson(json.decode(str));
-
-String chooseAvailabilityDataToJson(ChooseAvailabilityResponse data) =>
-    json.encode(data.toJson());
-
 class ChooseAvailabilityResponse {
   bool? status;
   String? message;

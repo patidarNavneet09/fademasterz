@@ -20,4 +20,5 @@ class ApiService {
   static const String chooseAvailability = '${baseUrl}choose-availability';
   static const String selectSpecialist = '${baseUrl}select-specialist';
   static const String bookingSummary = '${baseUrl}booking-summary';
+  static const String bookNow = '${baseUrl}book-now';
 }

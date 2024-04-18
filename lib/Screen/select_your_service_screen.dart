@@ -33,7 +33,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     super.initState();
   }
 
-  List<ShopServiceDataModel?>? selectedServiceList = [];
+  List<Service?>? selectedServiceList = [];
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +66,10 @@ class _SelectYourServicesState extends State<SelectYourServices> {
               shrinkWrap: true,
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: (shopWorkServiceModal.data?.length ?? 0),
+              itemCount: (shopWorkServiceModal.data?.workServices?.length ?? 0),
               itemBuilder: (BuildContext context, int index) {
-                var shopService = shopWorkServiceModal.data?[index];
+                var shopService =
+                    shopWorkServiceModal.data?.workServices?[index];
 
                 return GestureDetector(
                   onTap: () async {
@@ -111,7 +112,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
           ),
           Expanded(
             child: Visibility(
-              visible: (shopServiceModal.data?.isNotEmpty ?? false),
+              visible: (shopServiceModal.data?.services?.isNotEmpty ?? false),
               replacement: Center(
                 child: Text(
                   'No Service Available',
@@ -121,10 +122,10 @@ class _SelectYourServicesState extends State<SelectYourServices> {
               child: ListView.separated(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                itemCount: (shopServiceModal.data?.length ?? 0),
+                itemCount: (shopServiceModal.data?.services?.length ?? 0),
                 shrinkWrap: true,
                 itemBuilder: (context, index) {
-                  var shopService = shopServiceModal.data?[index];
+                  var shopService = shopServiceModal.data?.services?[index];
 
                   return Container(
                     padding:
@@ -194,19 +195,23 @@ class _SelectYourServicesState extends State<SelectYourServices> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
         child: ElevatedButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChooseAvailabilityBarber(
-                    price: selectedServiceList!
-                        .fold(
-                            0,
-                            (previousValue, element) =>
-                                previousValue +
-                                double.parse(element?.price ?? '0').toInt())
-                        .toStringAsFixed(0)),
-              ),
-            );
+            if (selectedServiceList?.isNotEmpty ?? false) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChooseAvailabilityBarber(
+                      price: selectedServiceList!
+                          .fold(
+                              0,
+                              (previousValue, element) =>
+                                  previousValue +
+                                  double.parse(element?.price ?? '0').toInt())
+                          .toStringAsFixed(0)),
+                ),
+              );
+            } else {
+              Helper().showToast('Please Select Your Service');
+            }
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 16),
@@ -237,7 +242,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     );
   }
 
-  void onItemAddRemove(ShopServiceDataModel? data) {
+  void onItemAddRemove(Service? data) {
     bool isAlreadySelected = false;
     selectedServiceList?.forEach((element) {
       if (element?.id == data?.id) {
@@ -249,7 +254,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     } else {
       selectedServiceList?.add(data);
     }
-    shopServiceModal.data?.forEach((element) {
+    shopServiceModal.data?.services?.forEach((element) {
       if (element.id == data?.id) {
         element.selected = !(element.selected ?? false);
       }
@@ -295,6 +300,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
       jsonResponse['message'],
     );
     if (jsonResponse['status'] == true) {
+      debugPrint('>>>>>>>>>>>>>>${jsonResponse['data']}<<<<<<<<<<<<<<');
       shopWorkServiceModal = ShopWorkServiceResponse.fromJson(jsonResponse);
 
       setState(() {});
@@ -345,7 +351,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     if (jsonResponse['status'] == true) {
       shopServiceModal = ShopServiceResponse.fromJson(jsonResponse);
 
-      shopServiceModal.data?.forEach((shopItemElement) {
+      shopServiceModal.data?.services?.forEach((shopItemElement) {
         selectedServiceList?.forEach((selectedItemElement) {
           if (shopItemElement.id == selectedItemElement?.id) {
             shopItemElement.selected = true;

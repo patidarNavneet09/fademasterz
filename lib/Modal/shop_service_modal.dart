@@ -1,6 +1,6 @@
 // To parse this JSON data, do
 //
-//     final shopServiceModal = shopServiceModalFromJson(jsonString);
+//     final shopServiceResponse = shopServiceResponseFromJson(jsonString);
 
 import 'dart:convert';
 
@@ -13,7 +13,7 @@ String shopServiceResponseToJson(ShopServiceResponse data) =>
 class ShopServiceResponse {
   bool? status;
   String? message;
-  List<ShopServiceDataModel>? data;
+  ServiceData? data;
 
   ShopServiceResponse({
     this.status,
@@ -25,38 +25,56 @@ class ShopServiceResponse {
       ShopServiceResponse(
         status: json["status"],
         message: json["message"],
-        data: json["data"] == null
-            ? []
-            : List<ShopServiceDataModel>.from(
-                json["data"]!.map((x) => ShopServiceDataModel.fromJson(x))),
+        data: json["data"] == null ? null : ServiceData.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
-        "data": data == null
+        "data": data?.toJson(),
+      };
+
+  @override
+  String toString() {
+    return 'ShopServiceResponse{status: $status, message: $message, data: $data}';
+  }
+}
+
+class ServiceData {
+  List<Service>? services;
+  int? totalPages;
+
+  ServiceData({
+    this.services,
+    this.totalPages,
+  });
+
+  factory ServiceData.fromJson(Map<String, dynamic> json) => ServiceData(
+        services: json["services"] == null
             ? []
-            : List<dynamic>.from(data!.map((x) => x.toJson())),
+            : List<Service>.from(
+                json["services"]!.map((x) => Service.fromJson(x))),
+        totalPages: json["total_pages"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "services": services == null
+            ? []
+            : List<dynamic>.from(services!.map((x) => x.toJson())),
+        "total_pages": totalPages,
       };
 }
 
-class ShopServiceDataModel {
+class Service {
   int? id;
   String? name;
   String? duration;
   String? price;
   bool? selected;
 
-  ShopServiceDataModel({
-    this.id,
-    this.name,
-    this.duration,
-    this.price,
-    this.selected,
-  });
+  Service({this.id, this.name, this.duration, this.price, this.selected});
 
-  factory ShopServiceDataModel.fromJson(Map<String, dynamic> json) =>
-      ShopServiceDataModel(
+  factory Service.fromJson(Map<String, dynamic> json) => Service(
         id: json["id"],
         name: json["name"],
         duration: json["duration"],
@@ -74,6 +92,6 @@ class ShopServiceDataModel {
 
   @override
   String toString() {
-    return 'Datum{id: $id, name: $name, duration: $duration, price: $price}';
+    return 'Service{id: $id, name: $name, duration: $duration, price: $price, selected: $selected}';
   }
 }

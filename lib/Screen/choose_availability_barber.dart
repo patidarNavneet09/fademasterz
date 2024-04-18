@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fademasterz/Modal/choose_availiabilty_modal.dart';
-import 'package:fademasterz/Modal/select_date_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:fademasterz/Utils/custom_textfield.dart';
@@ -42,23 +41,20 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
   TextEditingController noteCn = TextEditingController();
   String _selectedDate = '';
   int? specialist_id;
+  var specialist;
 
   /// The method for [DateRangePickerSelectionChanged] callback, which will be
   /// called whenever a selection changed on the date picker widget.
   void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
     setState(() {
       _selectedDate = args.value.toString();
-      _selectDateApi(context);
-      // debugPrint(
-      //     '>>>>>>>>>>>>>>${DateFormat('EEEE').format(DateTime.parse(_selectedDate)).toLowerCase()}<<<<<<<<<<<<<<');
-      // debugPrint(
-      //     '>>>>>>>>>>>>>>${DateFormat('yyyy-MM-dd').format(DateTime.parse(_selectedDate)).toLowerCase()}<<<<<<<<<<<<<<');
+      //_selectDateApi(context);
+      _chooseAvailabilityApi(context);
     });
   }
 
   final picker = ImagePicker();
   File? _imageFile;
-
   Future getImageFromGallery() async {
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
@@ -118,7 +114,6 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
   @override
   void initState() {
     _chooseAvailabilityApi(context);
-
     super.initState();
   }
 
@@ -213,7 +208,9 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                     SizedBox(
                       height: 110,
                       child: Visibility(
-                        visible: (selectDateResponse.data?.isNotEmpty ?? false),
+                        visible: (chooseAvailabilityResponse
+                                .data?.availableSpecialist?.isNotEmpty ??
+                            false),
                         replacement: Center(
                           child: Text(
                             'No Specialist Found',
@@ -225,22 +222,20 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                         child: ListView.separated(
                           shrinkWrap: true,
                           scrollDirection: Axis.horizontal,
-                          itemCount: (selectDateResponse.data?.length ?? 0),
+                          itemCount: (chooseAvailabilityResponse
+                                  .data?.availableSpecialist?.length ??
+                              0),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 11, vertical: 5),
                           itemBuilder: (BuildContext context, int index) {
-                            var specialist = selectDateResponse.data?[index];
+                            specialist = chooseAvailabilityResponse
+                                .data?.availableSpecialist?[index];
                             return InkWell(
                               onTap: () async {
                                 selectIndex = index;
 
-                                SharedPreferences sharedPreferences =
-                                    await SharedPreferences.getInstance();
-                                // sharedPreferences.setInt(
-                                //   'specialist_id',
-                                //   (specialist?.id ?? 0),
-                                // );
-                                specialist_id = (specialist?.id ?? 0);
+                                specialist_id = (specialist?.id);
+
                                 await _selectSpecialistTimeApi(context);
 
                                 setState(
@@ -276,7 +271,6 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                                         ),
                                       ),
                                       Text(
-                                        textAlign: TextAlign.center,
                                         (specialist?.name ?? ''),
                                         style: AppFonts.yellowFont.copyWith(
                                           color: selectIndex == index
@@ -325,7 +319,8 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                     SizedBox(
                       height: 35,
                       child: Visibility(
-                        visible: (selectSpecialistResponse.data?.isNotEmpty ??
+                        visible: (chooseAvailabilityResponse
+                                .data?.slots?.isNotEmpty ??
                             false),
                         replacement: Center(
                           child: Text(
@@ -339,14 +334,14 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                           shrinkWrap: true,
                           scrollDirection: Axis.horizontal,
                           itemCount:
-                              (selectSpecialistResponse.data?.length ?? 0),
+                              (selectSpecialistTimeResponse.data?.length ?? 0),
                           addSemanticIndexes: true,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 15,
                           ),
                           itemBuilder: (BuildContext context, int index) {
                             var timeSlot =
-                                selectSpecialistResponse.data?[index];
+                                selectSpecialistTimeResponse.data?[index];
                             return InkWell(
                               onTap: () {
                                 timeSelectIndex = index;
@@ -483,7 +478,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                     ),
                     CustomTextField(
                       controller: noteCn,
-                      hintText: 'Write a message',
+                      hintText: 'Write a message !',
                       maxLines: 4,
                       textInputAction: TextInputAction.done,
                       fillColor: const Color(0xff333333),
@@ -502,12 +497,40 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         child: ElevatedButton(
           onPressed: () {
+            int specialistId = (chooseAvailabilityResponse
+                    .data?.availableSpecialist?[selectIndex].id ??
+                specialist?.id);
+            String? time =
+                selectSpecialistTimeResponse.data?[timeSelectIndex].time;
+            String date = DateFormat('yyyy-MM-dd')
+                .format(
+                  DateTime.parse(
+                    _selectedDate.isNotEmpty
+                        ? _selectedDate.toString()
+                        : DateTime.now().toString(),
+                  ),
+                )
+                .toLowerCase();
+            String text = noteCn.text;
+            String? image = _imageFile?.path.toString();
+            //debugPrint('>>>>>>>>>>>>>>${image}<<<<<<<<<<<<<<');
+            // debugPrint('>>>>>>>>>>>>>>${specialistId}<<<<<<<<<<<<<<');
+            // debugPrint('>>>>>>>>>>>>>>${date}<<<<<<<<<<<<<<');
+            // debugPrint('>>>>>>>>>>>>>>${time}<<<<<<<<<<<<<<');
+
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const BookingSummaryScreen(),
+                builder: (context) => BookingSummaryScreen(
+                    time: time,
+                    date: date,
+                    image: image,
+                    price: widget.price,
+                    text: text,
+                    specialistId: specialistId),
               ),
             );
+            noteCn.clear();
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 16),
@@ -549,6 +572,24 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
     }
     var request = {};
     request["shop_id"] = sharedPreferences.getInt('shop_id');
+    request["selected_date"] = DateFormat('yyyy-MM-dd')
+        .format(
+          DateTime.parse(
+            _selectedDate.isNotEmpty
+                ? _selectedDate.toString()
+                : DateTime.now().toString(),
+          ),
+        )
+        .toLowerCase();
+    request["selected_day"] = DateFormat('EEEE')
+        .format(
+          DateTime.parse(
+            _selectedDate.isNotEmpty
+                ? _selectedDate.toString()
+                : DateTime.now().toString(),
+          ),
+        )
+        .toLowerCase();
     HttpWithMiddleware http = HttpWithMiddleware.build(
       middlewares: [
         HttpLogger(logLevel: LogLevel.BODY),
@@ -580,80 +621,16 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
     if (jsonResponse['status'] == true) {
       chooseAvailabilityResponse =
           ChooseAvailabilityResponse.fromJson(jsonResponse);
-
-      setState(() {});
-      _selectDateApi(context);
-    }
-  }
-
-  SelectDateResponse selectDateResponse = SelectDateResponse();
-
-  Future<void> _selectDateApi(BuildContext context) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
-    var request = {};
-    request["shop_id"] = sharedPreferences.getInt('shop_id');
-    request["selected_date"] = DateFormat('yyyy-MM-dd')
-        .format(
-          DateTime.parse(
-            _selectedDate.isNotEmpty
-                ? _selectedDate.toString()
-                : DateTime.now().toString(),
-          ),
-        )
-        .toLowerCase();
-    request["selected_day"] = DateFormat('EEEE')
-        .format(DateTime.parse(
-          _selectedDate.isNotEmpty
-              ? _selectedDate.toString()
-              : DateTime.now().toString(),
-        ))
-        .toLowerCase();
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
-
-    var response = await http.post(
-        Uri.parse(
-          ApiService.selectDate,
-        ),
-        body: jsonEncode(request),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${sharedPreferences.getString("access_Token")}'
-        });
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, false);
-    }
-
-    Map<String, dynamic> jsonResponse = jsonDecode(
-      response.body,
-    );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
-    if (jsonResponse['status'] == true) {
-      selectDateResponse = SelectDateResponse.fromJson(jsonResponse);
-
-      setState(() {});
-
-      if (selectDateResponse.data?.isNotEmpty ?? false) {
+      if (chooseAvailabilityResponse.data?.availableSpecialist?.isNotEmpty ??
+          false) {
         _selectSpecialistTimeApi(context);
       }
+      setState(() {});
     }
   }
 
-  SelectSpecialistResponse selectSpecialistResponse =
-      SelectSpecialistResponse();
-
+  SelectSpecialistTimeResponse selectSpecialistTimeResponse =
+      SelectSpecialistTimeResponse();
   Future<void> _selectSpecialistTimeApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -662,11 +639,10 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
     }
     var request = {};
 
-    debugPrint(
-        '>>>>>specialist_id>>>>>>>>>${selectDateResponse.data?[selectIndex].id}<<<<<<<<<<<<<<');
     request["shop_id"] = sharedPreferences.getInt('shop_id');
-    request["specialist_id"] = selectDateResponse.data?[selectIndex].id ??
-        specialist_id; //sharedPreferences.getInt('specialist_id');
+    request["specialist_id"] = (chooseAvailabilityResponse
+            .data?.availableSpecialist?[selectIndex].id ??
+        specialist_id); // sharedPreferences.getInt('specialist_id');
     request["selected_date"] = DateFormat('yyyy-MM-dd')
         .format(
           DateTime.parse(
@@ -705,8 +681,8 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
       jsonResponse['message'],
     );
     if (jsonResponse['status'] == true) {
-      selectSpecialistResponse =
-          SelectSpecialistResponse.fromJson(jsonResponse);
+      selectSpecialistTimeResponse =
+          SelectSpecialistTimeResponse.fromJson(jsonResponse);
 
       setState(() {});
     }

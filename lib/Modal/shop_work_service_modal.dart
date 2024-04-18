@@ -13,7 +13,7 @@ String shopWorkServiceResponseToJson(ShopWorkServiceResponse data) =>
 class ShopWorkServiceResponse {
   bool? status;
   String? message;
-  List<ShopWorkServiceData>? data;
+  ShopWorkServiceResponseData? data;
 
   ShopWorkServiceResponse({
     this.status,
@@ -26,17 +26,43 @@ class ShopWorkServiceResponse {
         status: json["status"],
         message: json["message"],
         data: json["data"] == null
-            ? []
-            : List<ShopWorkServiceData>.from(
-                json["data"]!.map((x) => ShopWorkServiceData.fromJson(x))),
+            ? null
+            : ShopWorkServiceResponseData.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
-        "data": data == null
+        "data": data == null ? null : data?.toJson(),
+      };
+}
+
+class ShopWorkServiceResponseData {
+  int? totalPages;
+  List<ShopWorkServiceData>? workServices;
+
+  ShopWorkServiceResponseData({
+    this.totalPages,
+    this.workServices,
+  });
+
+  factory ShopWorkServiceResponseData.fromJson(Map<String, dynamic> json) =>
+      ShopWorkServiceResponseData(
+        totalPages: json["total_pages"],
+        workServices: json["work_services"] == null
             ? []
-            : List<dynamic>.from(data!.map((x) => x.toJson())),
+            : List<ShopWorkServiceData>.from(
+                json["work_services"]!.map(
+                  (x) => ShopWorkServiceData.fromJson(x),
+                ),
+              ),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "total_pages": totalPages,
+        "work_services": workServices == null
+            ? []
+            : List<dynamic>.from(workServices!.map((x) => x.toJson())),
       };
 }
 
