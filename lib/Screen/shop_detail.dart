@@ -10,9 +10,9 @@ import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:maps_launcher/maps_launcher.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:readmore/readmore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -259,100 +259,101 @@ class _ShopDetailState extends State<ShopDetail> {
             ),
             child: ListView.builder(
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: (shopDetailModal.data?.review?.length ?? 3) > 3
+              itemCount: (shopDetailModal.data?.review?.length ?? 0) > 1
                   ? (shopDetailModal.data?.review?.length)
-                  : 3,
+                  : 1,
               shrinkWrap: true,
               padding: EdgeInsets.zero,
               itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Row(
-                    children: [
-                      SvgPicture.asset(
-                        AppIcon.ratingIcon,
-                      ),
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      Text(
-                        shopDetailModal.data?.avgRating == 0
-                            ? (shopDetailModal.data?.avgRating ?? '')
-                            : 'Not At Rating',
-                        //AppStrings.gallery,
-                        style: AppFonts.regular.copyWith(fontSize: 16),
-                      ),
-                      const Spacer(),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ReviewsScreen1(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          AppStrings.seeAll,
-                          style: AppFonts.yellowFont,
-                        ),
-                      )
-                    ],
-                  );
-                } else {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Divider(
-                        color: AppColor.dividerColor,
-                        height: 25,
-                      ),
+                var review = shopDetailModal.data?.review?[index];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (index == 0)
                       Row(
                         children: [
-                          Text(
-                            'Adam New',
-                            style: AppFonts.regular.copyWith(fontSize: 15),
+                          SvgPicture.asset(
+                            AppIcon.ratingIcon,
                           ),
-                          Spacer(),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 5),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColor.yellow,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                SvgPicture.asset(
-                                  AppIcon.ratingIcon,
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text(
+                            (shopDetailModal.data?.review?[index].rating ?? ''),
+
+                            //AppStrings.gallery,
+                            style: AppFonts.regular.copyWith(fontSize: 16),
+                          ),
+                          const Spacer(),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ReviewsScreen(
+                                    review: (shopDetailModal.data?.review),
+                                  ),
                                 ),
-                                SizedBox(
-                                  width: 6,
-                                ),
-                                Text(
-                                  (shopDetailModal.data?.avgRating ?? ''),
-                                  style: AppFonts.yellowFont,
-                                ),
-                              ],
+                              );
+                            },
+                            child: const Text(
+                              AppStrings.seeAll,
+                              style: AppFonts.yellowFont,
                             ),
                           )
                         ],
                       ),
-                      Text(
-                        'Lorem ipsum dolor sit amet consectetur. Vehicula vitae et senectus curabitur. Et facilisis diam vestibulum vel nibh massa lacus in morbi.',
-                        style: AppFonts.normalText.copyWith(fontSize: 14),
+                    Divider(
+                      color: AppColor.dividerColor,
+                      height: 25,
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          (review?.userName ?? ''),
+                          style: AppFonts.regular.copyWith(fontSize: 15),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColor.yellow,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              SvgPicture.asset(
+                                AppIcon.ratingIcon,
+                              ),
+                              SizedBox(
+                                width: 6,
+                              ),
+                              Text(
+                                (review?.rating ?? ''),
+                                style: AppFonts.yellowFont,
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                    Text(
+                      (review?.comment ?? ''),
+                      style: AppFonts.normalText.copyWith(fontSize: 14),
+                    ),
+                    Text(
+                      DateFormat('dd-MMM-yyyy').format(
+                        DateTime.parse(review?.createdAt.toString() ?? ''),
                       ),
-                      Text(
-                        DateFormat('dd-MMM-yyyy')
-                            .format(DateTime.now())
-                            .toString(),
-                        style: AppFonts.normalText
-                            .copyWith(fontSize: 13, color: Color(0xff989898)),
-                      ),
-                    ],
-                  );
-                }
+                      style: AppFonts.normalText
+                          .copyWith(fontSize: 13, color: Color(0xff989898)),
+                    ),
+                  ],
+                );
               },
             ),
           ),
@@ -368,253 +369,258 @@ class _ShopDetailState extends State<ShopDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.bg,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            //height: 250,
-            child: Stack(
-              children: [
-                Visibility(
-                  visible: (shopDetailModal.data?.image?.isNotEmpty ?? false),
-                  child: Image.network(
+      body: Visibility(
+        visible: (shopDetailModal.data?.name?.isNotEmpty ?? false),
+        replacement: const Center(
+          child: Text(
+            'No Data Found',
+            style: AppFonts.normalText,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              //height: 250,
+              child: Stack(
+                children: [
+                  Image.network(
                     ApiService.imageUrl + (shopDetailModal.data?.image ?? ''),
                     fit: BoxFit.fill,
                     height: 250,
                     width: MediaQuery.of(context).size.width,
                   ),
-                ),
-                Positioned(
-                  left: 15,
-                  top: MediaQuery.of(context).viewPadding.top,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                          color: AppColor.yellow, shape: BoxShape.circle),
-                      child: SvgPicture.asset(
-                        AppIcon.backIcon,
-                        color: AppColor.black,
+                  Positioned(
+                    left: 15,
+                    top: MediaQuery.of(context).viewPadding.top,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                            color: AppColor.yellow, shape: BoxShape.circle),
+                        child: SvgPicture.asset(
+                          AppIcon.backIcon,
+                          color: AppColor.black,
+                        ),
                       ),
                     ),
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 10,
-                    ),
-                    child: Text(
-                      shopDetailModal.data?.name ?? '',
-                      style: AppFonts.regular.copyWith(
-                        fontSize: 20,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 10,
+                      ),
+                      child: Text(
+                        shopDetailModal.data?.name ?? '',
+                        style: AppFonts.regular.copyWith(
+                          fontSize: 20,
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                      ),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            AppIcon.locationIcon,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Expanded(
+                            child: Text(
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              shopDetailModal.data?.address ?? '',
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 15, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset(
-                          AppIcon.locationIcon,
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Expanded(
-                          child: Text(
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            shopDetailModal.data?.address ?? '',
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 15, right: 15, top: 5),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            AppIcon.ratingIcon,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            (shopDetailModal.data?.avgRating == 0)
+                                ? 'No At Rating'
+                                : (shopDetailModal.data?.avgRating ?? ''),
                             style: AppFonts.regular.copyWith(
                                 fontSize: 15, fontWeight: FontWeight.w500),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 15, right: 15, top: 5),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset(
-                          AppIcon.ratingIcon,
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Text(
-                          shopDetailModal.data?.avgRating == 0
-                              ? (shopDetailModal.data?.avgRating ?? '')
-                              : 'No At Rating',
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 15, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 15, right: 15, top: 15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            launchUrl(Uri.parse(
-                                shopDetailModal.data?.instagramLink ?? ''));
-                          },
-                          child: Column(
-                            children: [
-                              SvgPicture.asset(AppIcon.instagramIcon),
-                              const SizedBox(
-                                height: 6,
-                              ),
-                              Text(
-                                AppStrings.instagram,
-                                style: AppFonts.regular.copyWith(fontSize: 15),
-                              )
-                            ],
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            SvgPicture.asset(AppIcon.openNowIcon),
-                            const SizedBox(
-                              height: 6,
-                            ),
-                            Text(
-                              AppStrings.openNow,
-                              style: AppFonts.regular.copyWith(fontSize: 15),
-                            )
-                          ],
-                        ),
-                        InkWell(
-                          onTap: () {
-                            MapsLauncher.launchCoordinates(
-                                double.parse(
-                                    shopDetailModal.data!.lat.toString()),
-                                double.parse(
-                                    shopDetailModal.data!.lng.toString()));
-                          },
-                          child: Column(
-                            children: [
-                              SvgPicture.asset(AppIcon.directionIcon),
-                              const SizedBox(
-                                height: 6,
-                              ),
-                              Text(
-                                AppStrings.direction,
-                                style: AppFonts.regular.copyWith(fontSize: 15),
-                              )
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 15, right: 15, top: 15),
-                    child: Divider(
-                      height: 2,
-                      color: AppColor.dividerColor,
-                    ),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 15, right: 15, top: 21),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          AppStrings.ourSpecialists,
-                          style: AppFonts.regular.copyWith(fontSize: 16),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SpecialistScreen(
-                                    specialist:
-                                        (shopDetailModal.data!.ourSpecialist)),
-                              ),
-                            );
-                            setState(() {});
-                          },
-                          child: Text(
-                            AppStrings.seeAll,
-                            style: AppFonts.yellowFont.copyWith(
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Visibility(
-                    visible: (shopDetailModal.data?.ourSpecialist?.isNotEmpty ??
-                        false),
-                    replacement: Center(
-                      child: Text(
-                        'No Specialist Found',
-                        style: AppFonts.appText.copyWith(fontSize: 14),
+                        ],
                       ),
                     ),
-                    child: SizedBox(
-                      height: 95,
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        scrollDirection: Axis.horizontal,
-                        itemCount:
-                            (shopDetailModal.data?.ourSpecialist!.length ?? 0) >
-                                    5
-                                ? 5
-                                : (shopDetailModal
-                                        .data?.ourSpecialist!.length ??
-                                    0),
-                        addSemanticIndexes: true,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 5),
-                        itemBuilder: (BuildContext context, int index) {
-                          var specialist =
-                              shopDetailModal.data?.ourSpecialist?[index];
-                          return GestureDetector(
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 15, right: 15, top: 15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          InkWell(
                             onTap: () {
-                              selectIndex = index;
-                              setState(
-                                () {},
-                              );
+                              launchUrl(Uri.parse(
+                                  shopDetailModal.data?.instagramLink ?? ''));
                             },
-                            child: Container(
-                              alignment: Alignment.center,
-                              decoration:
-                                  const BoxDecoration(shape: BoxShape.circle),
-                              //  margin: const EdgeInsets.all(5),
+                            child: Column(
+                              children: [
+                                SvgPicture.asset(AppIcon.instagramIcon),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                Text(
+                                  AppStrings.instagram,
+                                  style:
+                                      AppFonts.regular.copyWith(fontSize: 15),
+                                )
+                              ],
+                            ),
+                          ),
+                          Column(
+                            children: [
+                              SvgPicture.asset(AppIcon.openNowIcon),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Text(
+                                AppStrings.openNow,
+                                style: AppFonts.regular.copyWith(fontSize: 15),
+                              )
+                            ],
+                          ),
+                          InkWell(
+                            onTap: () {
+                              MapsLauncher.launchCoordinates(
+                                  double.parse(
+                                      shopDetailModal.data!.lat.toString()),
+                                  double.parse(
+                                      shopDetailModal.data!.lng.toString()));
+                            },
+                            child: Column(
+                              children: [
+                                SvgPicture.asset(AppIcon.directionIcon),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                Text(
+                                  AppStrings.direction,
+                                  style:
+                                      AppFonts.regular.copyWith(fontSize: 15),
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 15, right: 15, top: 15),
+                      child: Divider(
+                        height: 2,
+                        color: AppColor.dividerColor,
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 15, right: 15, top: 21),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppStrings.ourSpecialists,
+                            style: AppFonts.regular.copyWith(fontSize: 16),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SpecialistScreen(
+                                      specialist: (shopDetailModal
+                                          .data!.ourSpecialist)),
+                                ),
+                              );
+                              setState(() {});
+                            },
+                            child: Text(
+                              AppStrings.seeAll,
+                              style: AppFonts.yellowFont.copyWith(
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Visibility(
+                      visible:
+                          (shopDetailModal.data?.ourSpecialist?.isNotEmpty ??
+                              false),
+                      replacement: Center(
+                        child: Text(
+                          'No Specialist Found',
+                          style: AppFonts.appText.copyWith(fontSize: 14),
+                        ),
+                      ),
+                      child: SizedBox(
+                        height: 95,
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          itemCount: (shopDetailModal
+                                          .data?.ourSpecialist!.length ??
+                                      0) >
+                                  5
+                              ? 5
+                              : (shopDetailModal.data?.ourSpecialist!.length ??
+                                  0),
+                          addSemanticIndexes: true,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 15, vertical: 5),
+                          itemBuilder: (BuildContext context, int index) {
+                            var specialist =
+                                shopDetailModal.data?.ourSpecialist?[index];
+                            return GestureDetector(
+                              onTap: () {
+                                selectIndex = index;
+                                setState(
+                                  () {},
+                                );
+                              },
                               child: Column(
                                 children: [
                                   ClipRRect(
-                                    borderRadius: BorderRadius.circular(30),
+                                    borderRadius: BorderRadius.circular(35),
                                     child: Image.network(
                                       ApiService.imageUrl +
                                           (specialist?.image ?? ''),
                                       height: 60,
+                                      width: 60,
                                       fit: BoxFit.fill,
                                     ),
                                   ),
@@ -625,71 +631,72 @@ class _ShopDetailState extends State<ShopDetail> {
                                   )
                                 ],
                               ),
+                            );
+                          },
+                          separatorBuilder: (BuildContext context, int index) {
+                            return const SizedBox(
+                              width: 20,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    SizedBox(
+                      height: 33,
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: services.length,
+                        addSemanticIndexes: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        itemBuilder: (BuildContext context, int index) {
+                          return GestureDetector(
+                            onTap: () {
+                              selectIndex1 = index;
+                              setState(
+                                () {},
+                              );
+                            },
+                            child: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: selectIndex1 == index
+                                    ? AppColor.yellow
+                                    : Colors.transparent,
+                                border: Border.all(color: AppColor.yellow),
+                                borderRadius: BorderRadius.circular(19),
+                              ),
+                              //  margin: const EdgeInsets.all(5),
+                              child: Text(services[index],
+                                  style: selectIndex1 == index
+                                      ? AppFonts.text.copyWith(
+                                          color: AppColor.black1, fontSize: 14)
+                                      : AppFonts.yellowFont),
                             ),
                           );
                         },
                         separatorBuilder: (BuildContext context, int index) {
                           return const SizedBox(
-                            width: 20,
+                            width: 15,
                           );
                         },
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    height: 33,
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: services.length,
-                      addSemanticIndexes: true,
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      itemBuilder: (BuildContext context, int index) {
-                        return GestureDetector(
-                          onTap: () {
-                            selectIndex1 = index;
-                            setState(
-                              () {},
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: selectIndex1 == index
-                                  ? AppColor.yellow
-                                  : Colors.transparent,
-                              border: Border.all(color: AppColor.yellow),
-                              borderRadius: BorderRadius.circular(19),
-                            ),
-                            //  margin: const EdgeInsets.all(5),
-                            child: Text(services[index],
-                                style: selectIndex1 == index
-                                    ? AppFonts.text.copyWith(
-                                        color: AppColor.black1, fontSize: 14)
-                                    : AppFonts.yellowFont),
-                          ),
-                        );
-                      },
-                      separatorBuilder: (BuildContext context, int index) {
-                        return const SizedBox(
-                          width: 15,
-                        );
-                      },
+                    const SizedBox(
+                      height: 15,
                     ),
-                  ),
-                  const SizedBox(
-                    height: 15,
-                  ),
-                  if (categories.isNotEmpty) categories[selectIndex1],
-                ],
+                    if (categories.isNotEmpty) categories[selectIndex1],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: MyAppButton(
         title: AppStrings.bookNow,
@@ -710,45 +717,44 @@ class _ShopDetailState extends State<ShopDetail> {
   ShopDetailModal shopDetailModal = ShopDetailModal();
   Future<void> shopDetail(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
+      }
+      var request = {};
 
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
-    var request = {};
+      request["shop_id"] = sharedPreferences.getInt('shop_id');
 
-    request["shop_id"] = sharedPreferences.getInt('shop_id');
+      var response = await http.post(
+          Uri.parse(
+            ApiService.shopDetail,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
 
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, false);
+      }
 
-    var response = await http.post(
-        Uri.parse(
-          ApiService.shopDetail,
-        ),
-        body: jsonEncode(request),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${sharedPreferences.getString("access_Token")}'
-        });
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, false);
-    }
-
-    Map<String, dynamic> jsonResponse = jsonDecode(
-      response.body,
-    );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
-    if (jsonResponse['status'] == true) {
-      shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
-      setState(() {});
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (jsonResponse['status'] == true) {
+        shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(
+        e.toString(),
+      );
     }
   }
 }

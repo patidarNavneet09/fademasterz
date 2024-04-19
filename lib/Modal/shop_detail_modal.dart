@@ -65,7 +65,7 @@ class ShopDetailData {
   List<OurSpecialist>? ourSpecialist;
   List<Service>? services;
   List<Gallery>? gallery;
-  List<dynamic>? review;
+  List<Review>? review;
 
   ShopDetailData({
     this.id,
@@ -143,7 +143,7 @@ class ShopDetailData {
                 json["gallery"]!.map((x) => Gallery.fromJson(x))),
         review: json["review"] == null
             ? []
-            : List<dynamic>.from(json["review"]!.map((x) => x)),
+            : List<Review>.from(json["review"]!.map((x) => Review.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -248,4 +248,47 @@ class Service {
         "id": id,
         "name": name,
       };
+}
+
+class Review {
+  int? id;
+  String? userId;
+  String? rating;
+  String? comment;
+  DateTime? createdAt;
+  String? userName;
+
+  Review({
+    this.id,
+    this.userId,
+    this.rating,
+    this.comment,
+    this.createdAt,
+    this.userName,
+  });
+
+  factory Review.fromJson(Map<String, dynamic> json) => Review(
+        id: json["id"],
+        userId: json["user_id"],
+        rating: json["rating"],
+        comment: json["comment"],
+        createdAt: json["created_at"] == null
+            ? null
+            : DateTime.parse(json["created_at"]),
+        userName: json["user_name"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "user_id": userId,
+        "rating": rating,
+        "comment": comment,
+        "created_at": createdAt?.toIso8601String(),
+        "user_name": userName,
+      };
+
+  @override
+  String toString() {
+    return 'Review{id: $id, userId: $userId, rating: $rating, comment: $comment, createdAt: $createdAt, userName: $userName}';
+  }
 }

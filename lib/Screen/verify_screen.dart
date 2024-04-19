@@ -8,8 +8,8 @@ import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
@@ -258,12 +258,6 @@ class _VerifyScreenState extends State<VerifyScreen> {
     request["fcm_token"] = "test";
     request["device_id"] = sharedPreferences.getString('deviceId');
     request["device"] = sharedPreferences.getString('deviceType');
-
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
 
     var response = await http.post(
       Uri.parse(

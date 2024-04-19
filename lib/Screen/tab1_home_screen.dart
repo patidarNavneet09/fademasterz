@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
@@ -494,58 +494,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> homeDetail(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
+      }
 
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
+      if (latitude == null || longitude == null) {
+        await getLetLongPosition();
+      }
 
-    if (latitude == null || longitude == null) {
-      await getLetLongPosition();
-    }
-    var request = {};
-    request["latitude"] = latitude;
-    request['longitude'] = longitude;
-    request["search"] = searchCn.text.trim();
+      var request = {};
+      request["latitude"] = latitude.toString();
+      request['longitude'] = longitude.toString();
+      request["search"] = searchCn.text.trim();
 
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
+      var response = await http.post(
+          Uri.parse(
+            ApiService.home,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
 
-    var response = await http.post(
-        Uri.parse(
-          ApiService.home,
-        ),
-        body: jsonEncode(request),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${sharedPreferences.getString("access_Token")}'
-        });
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, false);
+      }
 
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, false);
-    }
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+      Helper().showToast(
+        jsonResponse['message'],
+      );
 
-    Map<String, dynamic> jsonResponse = jsonDecode(
-      response.body,
-    );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+      if (jsonResponse['status'] == true) {
+        homePageModal = HomePageModal.fromJson(jsonResponse);
+        sharedPreferences.setString(
+            'image', homePageModal.data?.userDetail?.image ?? '');
+        sharedPreferences.setString(
+            'name', homePageModal.data?.userDetail?.name ?? '');
 
-    if (jsonResponse['status'] == true) {
-      homePageModal = HomePageModal.fromJson(jsonResponse);
-      sharedPreferences.setString(
-          'image', homePageModal.data?.userDetail?.image ?? '');
-      sharedPreferences.setString(
-          'name', homePageModal.data?.userDetail?.name ?? '');
-
-      sharedPreferences.setBool("profileSetUp", true);
-
-      setState(() {});
+        sharedPreferences.setBool("profileSetUp", true);
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(e.toString());
     }
   }
 }

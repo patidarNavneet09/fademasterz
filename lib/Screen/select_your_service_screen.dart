@@ -8,7 +8,7 @@ import 'package:fademasterz/Utils/app_string.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
@@ -271,11 +271,6 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     }
     var request = {};
     request["shop_id"] = sharedPreferences.getInt('shop_id');
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
 
     var response = await http.post(
         Uri.parse(
@@ -319,12 +314,6 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     request["shop_id"] = sharedPreferences.getInt('shop_id');
     request["work_service_id"] =
         shopWorkServiceId; //sharedPreferences.getInt('shopWorkServiceId');
-
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
 
     var response = await http.post(
         Uri.parse(

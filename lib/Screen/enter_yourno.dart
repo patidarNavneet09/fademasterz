@@ -10,7 +10,7 @@ import 'package:fademasterz/Utils/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
@@ -118,12 +118,6 @@ class _EnterYourNoState extends State<EnterYourNo> {
     var request = {};
     request["country_code"] = "91";
     request['mobile_number'] = phoneCn.text.trim();
-
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
 
     var response = await http.post(
       Uri.parse(

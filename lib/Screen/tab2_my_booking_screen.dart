@@ -1,14 +1,22 @@
+import 'dart:convert';
+
+import 'package:fademasterz/Modal/my_booking_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../Booking/booking_details.dart';
+import '../ApiService/api_service.dart';
 import '../Booking/complete_booking_summary.dart';
+import '../Booking/upcoming_booking_details.dart';
 import '../Utils/app_assets.dart';
+import '../Utils/helper.dart';
+import '../Utils/utility.dart';
 
 class MyBookingScreen extends StatefulWidget {
   const MyBookingScreen({
@@ -21,11 +29,11 @@ class MyBookingScreen extends StatefulWidget {
 
 class _MyBookingScreenState extends State<MyBookingScreen> {
   bool isVisible = true;
-  late TabController _controller;
+  int? bookingId;
   @override
   void initState() {
     // TODO: implement initState
-
+    myBookingApi(context);
     super.initState();
   }
 
@@ -125,290 +133,352 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
             Expanded(
               child: Visibility(
                 visible: isVisible == true,
-                replacement: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: 2,
-                  itemBuilder: (BuildContext context, int index) {
-                    return DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColor.black,
-                        borderRadius: BorderRadius.circular(
-                          11,
+                replacement: Visibility(
+                  visible:
+                      (myBookingResponse.data?.completed?.isNotEmpty ?? false),
+                  replacement: const Center(
+                    child: Text(
+                      'No UpComing Booking',
+                      style: AppFonts.normalText,
+                    ),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: (myBookingResponse.data?.completed?.length ?? 0),
+                    itemBuilder: (BuildContext context, int index) {
+                      var myCompleteBooking =
+                          myBookingResponse.data?.completed?[index];
+
+                      bookingId = myBookingResponse.data?.completed?[index].id;
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColor.black,
+                          borderRadius: BorderRadius.circular(
+                            11,
+                          ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 9),
                         child: Column(
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '# 2304400',
-                                  style: AppFonts.yellowFont.copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                const Spacer(),
-                                SvgPicture.asset(AppIcon.timerIcon),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                Text('15:00', style: AppFonts.yellowFont),
-                                const SizedBox(
-                                  width: 12,
-                                ),
-                                SvgPicture.asset(AppIcon.calenderIcon),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                Text(
-                                    DateFormat('dd MMM yyyy')
-                                        .format(DateTime.now()),
-                                    style: AppFonts.yellowFont),
-                              ],
-                            ),
-                            Divider(
-                              color: AppColor.gray.withOpacity(.49),
-                            ),
-                            Row(
-                              children: [
-                                Image.asset(
-                                  AppAssets.homeImage,
-                                  height: 77,
-                                  width: 76,
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        AppStrings.shopName,
-                                        style: AppFonts.regular
-                                            .copyWith(fontSize: 16),
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Row(
-                                        children: [
-                                          SvgPicture.asset(
-                                            AppIcon.locationIcon,
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          Expanded(
-                                            child: Text(
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              'Sector 1, near shop, city center',
-                                              style: AppFonts.regular.copyWith(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Text(
-                                        '\$60',
-                                        style: AppFonts.yellowFont,
-                                      )
-                                    ],
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 2),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '#${myCompleteBooking?.bookingId ?? ''}',
+                                    style: AppFonts.yellowFont.copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500),
                                   ),
-                                )
-                              ],
+                                  const Spacer(),
+                                  SvgPicture.asset(AppIcon.timerIcon),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text((myCompleteBooking?.startTime ?? ''),
+                                      style: AppFonts.yellowFont),
+                                  const SizedBox(
+                                    width: 12,
+                                  ),
+                                  SvgPicture.asset(AppIcon.calenderIcon),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text(
+                                      // DateTime.parse((myCompleteBooking?.date
+                                      //             .toString() ??
+                                      //         '').)
+                                      //     .toString(),
+                                      DateFormat('dd MMM yyyy')
+                                          .format(DateTime.parse(
+                                        (myCompleteBooking?.date.toString() ??
+                                            ''),
+                                      )),
+                                      style: AppFonts.yellowFont),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: Divider(
+                                color: AppColor.gray.withOpacity(.49),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    height: 77,
+                                    width: 76,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        11,
+                                      ),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Image.network(
+                                      ApiService.imageUrl +
+                                          (myCompleteBooking?.shopImage ?? ''),
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          (myCompleteBooking?.shopName ?? ''),
+                                          style: AppFonts.regular
+                                              .copyWith(fontSize: 16),
+                                        ),
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              AppIcon.locationIcon,
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                (myCompleteBooking
+                                                        ?.shopAddress ??
+                                                    ''),
+                                                style: AppFonts.regular
+                                                    .copyWith(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500),
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        Text(
+                                          '\$ ${myCompleteBooking?.total ?? ''}',
+                                          style: AppFonts.yellowFont,
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                             SizedBox(
                               height: 8,
                             ),
                             InkWell(
-                              onTap: () {
+                              onTap: () async {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const CompleteBookingDetail(),
+                                    builder: (context) => CompleteBookingDetail(
+                                        bookingId: bookingId),
                                   ),
                                 );
                               },
-                              child: Container(
-                                height: 28,
-                                alignment: Alignment.center,
-                                decoration: const BoxDecoration(
-                                  color: AppColor.yellow,
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(10),
-                                    bottomRight: Radius.circular(10),
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Container(
+                                  height: 28,
+                                  alignment: Alignment.bottomCenter,
+                                  decoration: const BoxDecoration(
+                                    color: AppColor.yellow,
+                                    borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
                                   ),
-                                ),
-                                child: Text(
-                                  AppStrings.viewDetails,
-                                  style: AppFonts.blackFont.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.black1),
+                                  child: Text(
+                                    AppStrings.viewDetails,
+                                    style: AppFonts.blackFont.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColor.black1),
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const SizedBox(
-                    height: 10,
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const SizedBox(
+                      height: 10,
+                    ),
                   ),
                 ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: 8,
-                  itemBuilder: (BuildContext context, int index) {
-                    return DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColor.black,
-                        borderRadius: BorderRadius.circular(
-                          11,
+                child: Visibility(
+                  visible:
+                      (myBookingResponse.data?.upcoming?.isNotEmpty ?? false),
+                  replacement: const Center(
+                    child: Text(
+                      'No UpComing Booking',
+                      style: AppFonts.normalText,
+                    ),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: (myBookingResponse.data?.upcoming?.length ?? 0),
+                    itemBuilder: (BuildContext context, int index) {
+                      var myBooking = myBookingResponse.data?.upcoming?[index];
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColor.black,
+                          borderRadius: BorderRadius.circular(
+                            11,
+                          ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 9),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '# 2304400',
-                                  style: AppFonts.yellowFont.copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                const Spacer(),
-                                SvgPicture.asset(AppIcon.timerIcon),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                Text('15:00', style: AppFonts.yellowFont),
-                                const SizedBox(
-                                  width: 12,
-                                ),
-                                SvgPicture.asset(AppIcon.calenderIcon),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                Text(
-                                    DateFormat('dd MMM yyyy')
-                                        .format(DateTime.now()),
-                                    style: AppFonts.yellowFont),
-                              ],
-                            ),
-                            Divider(
-                              color: AppColor.gray.withOpacity(.49),
-                            ),
-                            Row(
-                              children: [
-                                Image.asset(
-                                  AppAssets.homeImage,
-                                  height: 77,
-                                  width: 76,
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        AppStrings.shopName,
-                                        style: AppFonts.regular
-                                            .copyWith(fontSize: 16),
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Row(
-                                        children: [
-                                          SvgPicture.asset(
-                                            AppIcon.locationIcon,
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          Expanded(
-                                            child: Text(
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              'Sector 1, near shop, city center',
-                                              style: AppFonts.regular.copyWith(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 9),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '#${myBooking?.id ?? ''}',
+                                    style: AppFonts.yellowFont.copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  const Spacer(),
+                                  SvgPicture.asset(AppIcon.timerIcon),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text('15:00', style: AppFonts.yellowFont),
+                                  const SizedBox(
+                                    width: 12,
+                                  ),
+                                  SvgPicture.asset(AppIcon.calenderIcon),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text(
+                                      DateFormat('dd MMM yyyy')
+                                          .format(DateTime.now()),
+                                      style: AppFonts.yellowFont),
+                                ],
+                              ),
+                              Divider(
+                                color: AppColor.gray.withOpacity(.49),
+                              ),
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    AppAssets.homeImage,
+                                    height: 77,
+                                    width: 76,
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          AppStrings.shopName,
+                                          style: AppFonts.regular
+                                              .copyWith(fontSize: 16),
+                                        ),
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        Row(
+                                          children: [
+                                            SvgPicture.asset(
+                                              AppIcon.locationIcon,
                                             ),
-                                          )
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Text(
-                                        '\$60',
-                                        style: AppFonts.yellowFont,
-                                      )
-                                    ],
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                'Sector 1, near shop, city center',
+                                                style: AppFonts.regular
+                                                    .copyWith(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500),
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        Text(
+                                          '\$60',
+                                          style: AppFonts.yellowFont,
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                              SizedBox(
+                                height: 8,
+                              ),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const BookingSummaryDetail(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  height: 28,
+                                  alignment: Alignment.center,
+                                  decoration: const BoxDecoration(
+                                    color: AppColor.yellow,
+                                    borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
                                   ),
-                                )
-                              ],
-                            ),
-                            SizedBox(
-                              height: 8,
-                            ),
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const BookingSummaryDetail(),
+                                  child: Text(
+                                    AppStrings.viewDetails,
+                                    style: AppFonts.blackFont.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColor.black1),
                                   ),
-                                );
-                              },
-                              child: Container(
-                                height: 28,
-                                alignment: Alignment.center,
-                                decoration: const BoxDecoration(
-                                  color: AppColor.yellow,
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(10),
-                                    bottomRight: Radius.circular(10),
-                                  ),
-                                ),
-                                child: Text(
-                                  AppStrings.viewDetails,
-                                  style: AppFonts.blackFont.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.black1),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const SizedBox(
-                    height: 10,
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const SizedBox(
+                      height: 10,
+                    ),
                   ),
                 ),
               ),
@@ -417,5 +487,46 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
         ),
       ),
     );
+  }
+
+  MyBookingResponse myBookingResponse = MyBookingResponse();
+  Future<void> myBookingApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
+      }
+
+      var request = {};
+      var response = await http.post(
+          Uri.parse(
+            ApiService.myBooking,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            "content-type": "application/json",
+            'Accept': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+
+      if (context.mounted) {
+        Utility.progressLoadingDialog(
+          context,
+          false,
+        );
+      }
+      Helper().showToast(jsonResponse['message']);
+      if (jsonResponse['status'] == true) {
+        myBookingResponse = MyBookingResponse.fromJson(jsonResponse);
+
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(e.toString());
+    }
   }
 }

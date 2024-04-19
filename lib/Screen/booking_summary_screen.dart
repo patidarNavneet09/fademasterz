@@ -1,41 +1,45 @@
 import 'dart:convert';
 
-import 'package:fademasterz/Modal/book_now_modal.dart';
-import 'package:fademasterz/Modal/booking_summary_modal.dart';
+import 'package:fademasterz/Modal/booking_summary_argument_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
+import 'package:fademasterz/Utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
-import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
+import '../Modal/book_now_modal.dart';
+import '../Modal/booking_summary_modal.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
-import '../Utils/helper.dart';
 import '../Utils/utility.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
-  final String? price, time, date, text;
-  final String? image;
-  final int? specialistId;
-  const BookingSummaryScreen(
-      {super.key,
-      this.price,
-      this.specialistId,
-      this.time,
-      this.date,
-      this.text,
-      this.image});
+  // final String? price, time, date, text;
+  // final String? image;
+  // final int? specialistId;
+  final BookingSummaryArgument data;
+  const BookingSummaryScreen({
+    super.key,
+    required this.data,
+    // this.price,
+    // this.specialistId,
+    // this.time,
+    // this.date,
+    // this.text,
+    // this.image,
+  });
 
   @override
-  State<BookingSummaryScreen> createState() => _BookingSummaryScreenState();
+  State<BookingSummaryScreen> createState() => BookingSummaryScreenState();
 }
 
-class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
+class BookingSummaryScreenState extends State<BookingSummaryScreen> {
   @override
   void initState() {
     bookingSummaryApi(context);
@@ -111,7 +115,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            (bookingSummaryResponse.data?.name ?? ''),
+                            (bookingSummaryResponse.data?.name ?? ' '),
                             style: AppFonts.regular.copyWith(fontSize: 16),
                           ),
                           const SizedBox(
@@ -141,14 +145,15 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                                 width: 10,
                               ),
                               Text(
-                                widget.date.toString(),
-                                // DateFormat('dd MMM yyyy').format(
-                                //   DateTime.parse(
-                                //     bookingSummaryResponse.data?.bookingDate
-                                //             .toString() ??
-                                //         '',
-                                //   ),
-                                //  ), //  DateTime.now().toString(),
+                                // widget.data.date.toString(),
+                                //'2024-04-19',
+                                DateFormat('dd MMM yyyy').format(
+                                  DateTime.parse(
+                                    bookingSummaryResponse.data?.bookingDate
+                                            .toString() ??
+                                        '',
+                                  ),
+                                ), //  DateTime.now().toString(),
                                 style: AppFonts.regular.copyWith(
                                     fontSize: 14, fontWeight: FontWeight.w500),
                               ),
@@ -158,7 +163,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                             height: 5,
                           ),
                           Text(
-                            '\$ ${bookingSummaryResponse.data?.subTotal ?? ' '}',
+                            '\$${bookingSummaryResponse.data?.subTotal ?? ' '}',
                             style: AppFonts.yellowFont.copyWith(
                                 fontSize: 16, fontWeight: FontWeight.w600),
                           ),
@@ -194,7 +199,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                     Text(
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      (bookingSummaryResponse.data?.address ?? ''),
+                      (bookingSummaryResponse.data?.address ?? ' '),
                       style: AppFonts.regular
                           .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
@@ -247,14 +252,15 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.date.toString(),
-                          // DateFormat('dd MMM yyyy').format(
-                          //   DateTime.parse(
-                          //     bookingSummaryResponse.data?.bookingDate
-                          //             .toString() ??
-                          //         '',
-                          //   ),
-                          // ),
+                          //widget.data.date.toString(),
+                          //'2024-04-19',
+                          DateFormat('dd MMM yyyy').format(
+                            DateTime.parse(
+                              bookingSummaryResponse.data?.bookingDate
+                                      .toString() ??
+                                  '',
+                            ),
+                          ),
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
@@ -262,7 +268,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                           height: 9,
                         ),
                         Text(
-                          (bookingSummaryResponse.data?.bookingTime ?? ''),
+                          (bookingSummaryResponse.data?.bookingTime ?? ' '),
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
@@ -308,7 +314,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                         Row(
                           children: [
                             Text(
-                              (service?.name ?? ''),
+                              (service?.name ?? ' '),
                               style: AppFonts.regular.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
@@ -368,7 +374,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              (bookingSummaryResponse.data?.subTotal ?? ''),
+                              (bookingSummaryResponse.data?.subTotal ?? ' '),
                               style: AppFonts.regular.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
@@ -376,7 +382,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                               height: 9,
                             ),
                             Text(
-                              (bookingSummaryResponse.data?.tax ?? ''),
+                              (bookingSummaryResponse.data?.tax ?? ' '),
                               style: AppFonts.regular.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
@@ -400,7 +406,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                         ),
                         const Spacer(),
                         Text(
-                          (bookingSummaryResponse.data?.total ?? ''),
+                          (bookingSummaryResponse.data?.total ?? ' '),
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
@@ -417,7 +423,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
         title: AppStrings.proceedTOPay,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () {
-          bookNowApi(context);
+          //   bookNowApi(context);
           // Navigator.push(
           //   context,
           //   MaterialPageRoute(
@@ -433,51 +439,48 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
 
   Future<void> bookingSummaryApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
+      }
+      var request = {};
 
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
-    var request = {};
+      request["shop_id"] = sharedPreferences.getInt('shop_id');
+      request["specialist_id"] = widget.data.specialistId;
+      request["time"] = widget.data.time.toString();
+      request["price"] = widget.data.price.toString();
+      request["service_ids"] = '1,3';
+      request["date"] = widget.data.date.toString();
 
-    request["shop_id"] = sharedPreferences.getInt('shop_id');
-    request["specialist_id"] = widget.specialistId;
-    request["time"] = widget.time;
-    request["price"] = widget.price;
-    request["service_ids"] = '1,3';
-    request["date"] = widget.date;
+      var response = await http.post(
+          Uri.parse(
+            ApiService.bookingSummary,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
 
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, false);
+      }
 
-    var response = await http.post(
-        Uri.parse(
-          ApiService.bookingSummary,
-        ),
-        body: jsonEncode(request),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${sharedPreferences.getString("access_Token")}'
-        });
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (jsonResponse['status'] == true) {
+        bookingSummaryResponse = BookingSummaryResponse.fromJson(jsonResponse);
 
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, false);
-    }
-
-    Map<String, dynamic> jsonResponse = jsonDecode(
-      response.body,
-    );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
-    if (jsonResponse['status'] == true) {
-      bookingSummaryResponse = BookingSummaryResponse.fromJson(jsonResponse);
-
-      setState(() {});
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(e.toString());
     }
   }
 
@@ -495,22 +498,21 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       'Authorization': 'Bearer ${sharedPreferences.getString("access_Token")}'
     };
     var request = http.MultipartRequest('POST', Uri.parse(ApiService.bookNow));
-    debugPrint('>>>>>>>>>>>>>>${widget.date}<<<<<<<<<<<<<<');
-    debugPrint('>>>>>>>>>>>>>>${widget.image}<<<<<<<<<<<<<<');
+
     request.fields.addAll({
       'shop_id': sharedPreferences.getInt('shop_id').toString(),
-      'date': widget.date.toString(),
-      'time': widget.time.toString(),
+      'date': widget.data.date.toString(),
+      'time': widget.data.time.toString(),
       'sub_total': '330',
       'tax': '82.5',
       'total': '412.5',
-      'specialist_id': widget.specialistId.toString(),
+      'specialist_id': widget.data.specialistId.toString(),
       'service_ids': '1,3',
-      'note': widget.text.toString(),
+      'note': widget.data.notetext.toString(),
     });
     // request.files.add(
     //   await http.MultipartFile.fromPath(
-    //       'desired_look', (widget.image.toString() ?? '')),
+    //       'desired_look', (widget.data.image.toString() ?? '')),
     // );
     request.headers.addAll(headers);
 

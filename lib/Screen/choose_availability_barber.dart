@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
+import 'package:fademasterz/Modal/booking_summary_argument_modal.dart';
 import 'package:fademasterz/Modal/choose_availiabilty_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
@@ -9,9 +10,9 @@ import 'package:fademasterz/Utils/custom_textfield.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
@@ -513,23 +514,40 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                 .toLowerCase();
             String text = noteCn.text;
             String? image = _imageFile?.path.toString();
-            //debugPrint('>>>>>>>>>>>>>>${image}<<<<<<<<<<<<<<');
-            // debugPrint('>>>>>>>>>>>>>>${specialistId}<<<<<<<<<<<<<<');
-            // debugPrint('>>>>>>>>>>>>>>${date}<<<<<<<<<<<<<<');
-            // debugPrint('>>>>>>>>>>>>>>${time}<<<<<<<<<<<<<<');
 
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => BookingSummaryScreen(
-                    time: time,
-                    date: date,
-                    image: image,
-                    price: widget.price,
-                    text: text,
-                    specialistId: specialistId),
+                    data: BookingSummaryArgument(
+                  time: time,
+                  date: date,
+                  price: widget.price,
+                  notetext: noteCn.text,
+                  specialistId: specialistId,
+                  image: image,
+                )),
               ),
             );
+
+            // debugPrint('>>>>>>>>>>>>>>${widget.price}<<<<<<<<<<<<<<');
+            // debugPrint('>>>>>>>>>>>>>>${specialistId}<<<<<<<<<<<<<<');
+            // debugPrint('>>>>>>>>>>>>>>${date}<<<<<<<<<<<<<<');
+            // debugPrint('>>>>>>>>>>>>>>${time}<<<<<<<<<<<<<<');
+
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) => BookingSummaryScreen(
+            //         // time: time,
+            //         // date: date,
+            //         // // image: image,
+            //         // price: widget.price,
+            //         // text: text,
+            //         // specialistId: specialistId,
+            //         ),
+            //   ),
+            // );
             noteCn.clear();
           },
           style: ElevatedButton.styleFrom(
@@ -566,66 +584,64 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
 
   Future<void> _chooseAvailabilityApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
-    var request = {};
-    request["shop_id"] = sharedPreferences.getInt('shop_id');
-    request["selected_date"] = DateFormat('yyyy-MM-dd')
-        .format(
-          DateTime.parse(
-            _selectedDate.isNotEmpty
-                ? _selectedDate.toString()
-                : DateTime.now().toString(),
-          ),
-        )
-        .toLowerCase();
-    request["selected_day"] = DateFormat('EEEE')
-        .format(
-          DateTime.parse(
-            _selectedDate.isNotEmpty
-                ? _selectedDate.toString()
-                : DateTime.now().toString(),
-          ),
-        )
-        .toLowerCase();
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
-
-    var response = await http.post(
-        Uri.parse(
-          ApiService.chooseAvailability,
-        ),
-        body: jsonEncode(request),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${sharedPreferences.getString("access_Token")}'
-        });
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, false);
-    }
-
-    Map<String, dynamic> jsonResponse = jsonDecode(
-      response.body,
-    );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
-    if (jsonResponse['status'] == true) {
-      chooseAvailabilityResponse =
-          ChooseAvailabilityResponse.fromJson(jsonResponse);
-      if (chooseAvailabilityResponse.data?.availableSpecialist?.isNotEmpty ??
-          false) {
-        _selectSpecialistTimeApi(context);
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
       }
-      setState(() {});
+      var request = {};
+      request["shop_id"] = sharedPreferences.getInt('shop_id');
+      request["selected_date"] = DateFormat('yyyy-MM-dd')
+          .format(
+            DateTime.parse(
+              _selectedDate.isNotEmpty
+                  ? _selectedDate.toString()
+                  : DateTime.now().toString(),
+            ),
+          )
+          .toLowerCase();
+      request["selected_day"] = DateFormat('EEEE')
+          .format(
+            DateTime.parse(
+              _selectedDate.isNotEmpty
+                  ? _selectedDate.toString()
+                  : DateTime.now().toString(),
+            ),
+          )
+          .toLowerCase();
+
+      var response = await http.post(
+          Uri.parse(
+            ApiService.chooseAvailability,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
+
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, false);
+      }
+
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (jsonResponse['status'] == true) {
+        chooseAvailabilityResponse =
+            ChooseAvailabilityResponse.fromJson(jsonResponse);
+        if (chooseAvailabilityResponse.data?.availableSpecialist?.isNotEmpty ??
+            false) {
+          _selectSpecialistTimeApi(context);
+        }
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(e.toString());
     }
   }
 
@@ -652,11 +668,6 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
           ),
         )
         .toLowerCase();
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
 
     var response = await http.post(
         Uri.parse(

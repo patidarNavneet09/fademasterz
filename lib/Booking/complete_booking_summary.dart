@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
@@ -5,14 +7,21 @@ import 'package:fademasterz/Utils/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../ApiService/api_service.dart';
+import '../Modal/booking_detail_modal.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
+import '../Utils/helper.dart';
+import '../Utils/utility.dart';
 
 class CompleteBookingDetail extends StatefulWidget {
-  const CompleteBookingDetail({super.key});
+  final int? bookingId;
+  const CompleteBookingDetail({super.key, this.bookingId});
 
   @override
   State<CompleteBookingDetail> createState() => _CompleteBookingDetailState();
@@ -20,6 +29,12 @@ class CompleteBookingDetail extends StatefulWidget {
 
 class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
   TextEditingController reviewCn = TextEditingController();
+  String? rating1 = '';
+  @override
+  void initState() {
+    bookingDetailApi(context);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +72,21 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                 ),
                 child: Row(
                   children: [
-                    Image.asset(
-                      AppAssets.homeImage,
+                    Container(
                       height: 76,
                       width: 77,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          11,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.network(
+                        ApiService.imageUrl +
+                            (bookingDetailResponse.data?.shopImage ?? ''),
+                        // (bookingDetailResponse.data?.shopImage ?? ''),
+                        fit: BoxFit.fill,
+                      ),
                     ),
                     const SizedBox(
                       width: 10,
@@ -71,7 +97,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            AppStrings.shopName,
+                            (bookingDetailResponse.data?.shopName ?? ''),
                             style: AppFonts.regular.copyWith(fontSize: 16),
                           ),
                           const SizedBox(
@@ -86,7 +112,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                                 width: 10,
                               ),
                               Text(
-                                '19:00',
+                                (bookingDetailResponse.data?.startTime ?? ''),
                                 style: AppFonts.regular.copyWith(
                                     fontSize: 14, fontWeight: FontWeight.w500),
                               ),
@@ -100,8 +126,14 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                                 width: 10,
                               ),
                               Text(
+                                // (bookingDetailResponse.data?.date != null)
+                                //     ?
                                 DateFormat('dd MMM yyyy').format(
-                                  DateTime.now(),
+                                  DateTime.parse(
+                                    (bookingDetailResponse.data?.date
+                                            .toString() ??
+                                        ''),
+                                  ),
                                 ), //  DateTime.now().toString(),
                                 style: AppFonts.regular.copyWith(
                                     fontSize: 14, fontWeight: FontWeight.w500),
@@ -112,7 +144,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                             height: 5,
                           ),
                           Text(
-                            '\$120',
+                            '\$${(bookingDetailResponse.data?.total ?? '')}',
                             style: AppFonts.yellowFont.copyWith(
                                 fontSize: 16, fontWeight: FontWeight.w600),
                           ),
@@ -148,7 +180,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                     Text(
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      'Sector 1, near shop, city center 20021',
+                      (bookingDetailResponse.data?.shopAddress ?? ''),
                       style: AppFonts.regular
                           .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
@@ -202,7 +234,10 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                       children: [
                         Text(
                           DateFormat('dd MMM yyyy').format(
-                            DateTime.now(),
+                            DateTime.parse(
+                              (bookingDetailResponse.data?.date.toString() ??
+                                  ''),
+                            ),
                           ),
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
@@ -211,7 +246,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                           height: 9,
                         ),
                         Text(
-                          '19:00',
+                          (bookingDetailResponse.data?.startTime ?? ''),
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
@@ -219,7 +254,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                           height: 9,
                         ),
                         Text(
-                          'Adam Nilson',
+                          (bookingDetailResponse.data?.specialistName ?? ''),
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
@@ -241,68 +276,37 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                     11,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Column(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: bookingDetailResponse.data?.services?.length,
+                  itemBuilder: (context, index) {
+                    var service = bookingDetailResponse.data?.services?[index];
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          AppStrings.services,
-                          style: AppFonts.yellowFont.copyWith(
-                            fontSize: 13,
+                        if (index == 0)
+                          const Text(
+                            AppStrings.services,
+                            style: AppFonts.yellowFont,
                           ),
-                        ),
-                        Text(
-                          AppStrings.hairWash,
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(
-                          height: 9,
-                        ),
-                        Text(
-                          AppStrings.haircut,
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(
-                          height: 9,
-                        ),
-                        Text(
-                          AppStrings.nails,
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
+                        Row(
+                          children: [
+                            Text(
+                              (service?.name ?? ' '),
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '\$${(service?.price ?? ' ')}',
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                    const Spacer(),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '\$20',
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(
-                          height: 9,
-                        ),
-                        Text(
-                          '\$30',
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(
-                          height: 9,
-                        ),
-                        Text(
-                          '\$10',
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(
@@ -348,7 +352,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '\$20',
+                              '\$${bookingDetailResponse.data?.subTotal ?? ''}',
                               style: AppFonts.regular.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
@@ -356,7 +360,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                               height: 9,
                             ),
                             Text(
-                              '\$10',
+                              '\$${bookingDetailResponse.data?.tax ?? ''}',
                               style: AppFonts.regular.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
@@ -380,7 +384,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                         ),
                         const Spacer(),
                         Text(
-                          '\$50',
+                          '\$${bookingDetailResponse.data?.total ?? ''}',
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
@@ -395,7 +399,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
       ),
       bottomNavigationBar: MyAppButton(
         title: AppStrings.rateNow,
-        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () {
           showDialog(
             barrierDismissible: false,
@@ -461,27 +465,27 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                             textAlign: TextAlign.center,
                             'Please leave your review so others people can know your opinion.',
                             style: AppFonts.text.copyWith(
-                              color: Color(0xff5F5F5F).withOpacity(.90),
+                              color: const Color(0xff5F5F5F).withOpacity(.90),
                             ),
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 17,
                         ),
                         RatingBar.builder(
-                          initialRating: 3,
+                          initialRating: 1.5,
                           minRating: 1,
                           direction: Axis.horizontal,
                           allowHalfRating: true,
                           itemCount: 5,
                           itemPadding:
                               const EdgeInsets.symmetric(horizontal: 4.0),
-                          itemBuilder: (context, _) => Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                          ),
+                          itemBuilder: (context, _) =>
+                              const Icon(Icons.star, color: AppColor.yellow),
                           onRatingUpdate: (rating) {
-                            print(rating);
+                            rating1 = rating.toString();
+                            setState(() {});
+                            //  print(rating);
                           },
                         ),
                         Padding(
@@ -501,8 +505,8 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                           ),
                         ),
                         MyAppButton(
-                          onPress: () {
-                            Navigator.of(context).pop();
+                          onPress: () async {
+                            await rateNowApi(context);
                           },
                           height: 48,
                           padding: EdgeInsets.symmetric(horizontal: 15),
@@ -521,5 +525,92 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
         },
       ),
     );
+  }
+
+  BookingDetailResponse bookingDetailResponse = BookingDetailResponse();
+  Future<void> bookingDetailApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
+      }
+      var request = {};
+
+      request["booking_id"] = widget.bookingId;
+
+      var response = await http.post(
+          Uri.parse(
+            ApiService.bookingDetail,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
+
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, false);
+      }
+
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (jsonResponse['status'] == true) {
+        bookingDetailResponse = BookingDetailResponse.fromJson(jsonResponse);
+
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(e.toString());
+    }
+  }
+
+  Future<void> rateNowApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
+      }
+      var request = {};
+      debugPrint('>>>>>>>>>>>>>>${rating1.toString()}<<<<<<<<<<<<<<');
+      request["booking_id"] = widget.bookingId;
+      request["rating"] = rating1.toString();
+      request["comment"] = reviewCn.text.toString();
+
+      var response = await http.post(
+          Uri.parse(
+            ApiService.rateNow,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
+
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, false);
+      }
+
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (jsonResponse['status'] == true) {
+        Navigator.of(context).pop();
+        reviewCn.clear();
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(e.toString());
+    }
   }
 }

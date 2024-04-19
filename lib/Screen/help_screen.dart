@@ -7,7 +7,7 @@ import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../ApiService/api_service.dart';
@@ -279,12 +279,6 @@ class _HelpScreenState extends State<HelpScreen> {
     }
     var request = {};
 
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
-
     var response = await http.post(
         Uri.parse(
           ApiService.helpCenter,
@@ -325,12 +319,6 @@ class _HelpScreenState extends State<HelpScreen> {
       Utility.progressLoadingDialog(context, true);
     }
     var request = {};
-
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
 
     var response = await http.post(
         Uri.parse(

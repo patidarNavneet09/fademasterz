@@ -21,4 +21,7 @@ class ApiService {
   static const String selectSpecialist = '${baseUrl}select-specialist';
   static const String bookingSummary = '${baseUrl}booking-summary';
   static const String bookNow = '${baseUrl}book-now';
+  static const String myBooking = '${baseUrl}my-booking';
+  static const String bookingDetail = '${baseUrl}booking-detail';
+  static const String rateNow = '${baseUrl}rate-now';
 }

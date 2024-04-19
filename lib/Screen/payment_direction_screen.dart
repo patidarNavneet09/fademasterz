@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:flutter_svg/svg.dart';
 
-import '../Booking/booking_details.dart';
+import '../Booking/upcoming_booking_details.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_fonts.dart';
 import '../Utils/app_string.dart';

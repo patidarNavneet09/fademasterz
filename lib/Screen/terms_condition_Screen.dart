@@ -7,7 +7,7 @@ import 'package:fademasterz/Utils/app_string.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:pretty_http_logger/pretty_http_logger.dart';
+import 'package:http/http.dart' as http;
 
 import '../ApiService/api_service.dart';
 import '../Utils/app_assets.dart';
@@ -77,12 +77,6 @@ class _TermsConditionScreen extends State<TermsConditionScreen> {
       Utility.progressLoadingDialog(context, true);
     }
     var request = {};
-
-    HttpWithMiddleware http = HttpWithMiddleware.build(
-      middlewares: [
-        HttpLogger(logLevel: LogLevel.BODY),
-      ],
-    );
 
     var response = await http.post(
         Uri.parse(

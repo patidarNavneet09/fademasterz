@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
+import '../ApiService/api_service.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
@@ -29,6 +30,11 @@ class _BookingSummaryDetailState extends State<BookingSummaryDetail> {
           ),
         ),
         (route) => false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -74,10 +80,20 @@ class _BookingSummaryDetailState extends State<BookingSummaryDetail> {
                 ),
                 child: Row(
                   children: [
-                    Image.asset(
-                      AppAssets.homeImage,
+                    Container(
                       height: 76,
                       width: 77,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          11,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.network(
+                        ApiService.imageUrl + '',
+                        // (bookingDetailResponse.data?.shopImage ?? ''),
+                        fit: BoxFit.fill,
+                      ),
                     ),
                     const SizedBox(
                       width: 10,
@@ -1147,4 +1163,47 @@ class _BookingSummaryDetailState extends State<BookingSummaryDetail> {
       ),
     );
   }
+
+/*  BookingDetailResponse bookingDetailResponse = BookingDetailResponse();
+  Future<void> bookingDetailApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    try {
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, true);
+      }
+      var request = {};
+
+      request["booking_id"] = 1;
+
+      var response = await http.post(
+          Uri.parse(
+            ApiService.bookingDetail,
+          ),
+          body: jsonEncode(request),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization':
+                'Bearer ${sharedPreferences.getString("access_Token")}'
+          });
+
+      if (context.mounted) {
+        Utility.progressLoadingDialog(context, false);
+      }
+
+      Map<String, dynamic> jsonResponse = jsonDecode(
+        response.body,
+      );
+      Helper().showToast(
+        jsonResponse['message'],
+      );
+      if (jsonResponse['status'] == true) {
+        bookingDetailResponse = BookingDetailResponse.fromJson(jsonResponse);
+
+        setState(() {});
+      }
+    } catch (e) {
+      Helper().showToast(e.toString());
+    }
+  }*/
 }
