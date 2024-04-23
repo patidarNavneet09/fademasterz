@@ -38,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     } else {
       await showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (ctx) {
           return Dialog(
@@ -87,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // await Geolocator.openLocationSettings();
                       //   await getLocation();
                       await getLetLongPosition();
-                      //homeDetail(context);
+
                       Navigator.of(ctx).pop();
                     },
                     height: 48,
@@ -99,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(
                     height: 20,
                   ),
-                  MyAppButton(
+                  /*        MyAppButton(
                     onPress: () {
                       Navigator.of(ctx).pop();
                     },
@@ -109,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         .copyWith(fontWeight: FontWeight.w500),
                     radius: 39,
                     color: const Color(0xffFFFBF0),
-                  ),
+                  ),*/
                 ],
               ),
             ),
@@ -167,8 +168,6 @@ class _HomeScreenState extends State<HomeScreen> {
         desiredAccuracy: LocationAccuracy.high);
     longitude = position.longitude;
     latitude = position.latitude;
-    debugPrint('>>>>>>>>>>>>>>${latitude}<<<<<<<<<<<<<<');
-    debugPrint('>>>>>>>>>>>>>>${longitude}<<<<<<<<<<<<<<');
   }
 
   @override
@@ -530,7 +529,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Helper().showToast(
         jsonResponse['message'],
       );
-
+      sharedPreferences.setBool("profileSetUp", true);
       if (jsonResponse['status'] == true) {
         homePageModal = HomePageModal.fromJson(jsonResponse);
         sharedPreferences.setString(

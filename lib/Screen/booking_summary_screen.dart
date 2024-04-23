@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fademasterz/Modal/booking_summary_argument_modal.dart';
+import 'package:fademasterz/Screen/web_view_page.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
@@ -20,19 +21,11 @@ import '../Utils/custom_app_button.dart';
 import '../Utils/utility.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
-  // final String? price, time, date, text;
-  // final String? image;
-  // final int? specialistId;
   final BookingSummaryArgument data;
+
   const BookingSummaryScreen({
     super.key,
     required this.data,
-    // this.price,
-    // this.specialistId,
-    // this.time,
-    // this.date,
-    // this.text,
-    // this.image,
   });
 
   @override
@@ -40,9 +33,145 @@ class BookingSummaryScreen extends StatefulWidget {
 }
 
 class BookingSummaryScreenState extends State<BookingSummaryScreen> {
+  BookNowResponse? bookNowResponse;
+
+  BookingSummaryResponse? bookingSummaryResponse;
+
+  bool showLoader = false;
+
+  void setLoader(bool value) {
+    showLoader = value;
+    setState(() {});
+  }
+
+  Future<void> bookingSummaryApi(BuildContext context) async {
+    // Utility.progressLoadingDialog(context, true);
+    setLoader(true);
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    // try {
+    var request = {};
+
+    request["shop_id"] =
+        widget.data.shopId ?? sharedPreferences.getInt('shop_id');
+    request["specialist_id"] = widget.data.specialistId;
+    request["time"] = widget.data.time.toString();
+    request["price"] = widget.data.price.toString();
+    request["service_ids"] = widget.data.serviceId.toString();
+    request["date"] = widget.data.date.toString();
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.bookingSummary,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    // if (context.mounted) {
+    //   Utility.progressLoadingDialog(context, false);
+    // }
+    setLoader(false);
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    Helper().showToast(
+      jsonResponse['message'],
+    );
+    if (jsonResponse['status']) {
+      bookingSummaryResponse = BookingSummaryResponse.fromJson(jsonResponse);
+
+      setState(() {});
+    }
+    // } catch (e) {
+    //   if (context.mounted) {
+    //     Utility.progressLoadingDialog(context, false);
+    //   }
+    //   Helper().showToast(e.toString());
+    // }
+  }
+
+  Future<void> bookNowApi(BuildContext context) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+
+    var headers = {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer ${sharedPreferences.getString("access_Token")}'
+    };
+    var request = http.MultipartRequest('POST', Uri.parse(ApiService.bookNow));
+
+    request.fields.addAll({
+      'shop_id':
+          widget.data.shopId ?? sharedPreferences.getInt('shop_id').toString(),
+      'date': widget.data.date.toString(),
+      'time': widget.data.time.toString(),
+      'sub_total': (bookingSummaryResponse?.data?.subTotal.toString() ?? ''),
+      'tax': (bookingSummaryResponse?.data?.tax.toString() ?? ''),
+      'total': (bookingSummaryResponse?.data?.total.toString() ?? ''),
+      'specialist_id': widget.data.specialistId.toString(),
+      'service_ids': widget.data.serviceId.toString(),
+      'note': widget.data.notetext.toString(),
+    });
+    if (widget.data.image?.isNotEmpty ?? false) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+            'desired_look', (widget.data.image.toString() ?? ' ')),
+      );
+    }
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    setState(
+      () {},
+    );
+    var result = await response.stream.bytesToString();
+
+    var jsonResponse = jsonDecode(result);
+
+    Helper().showToast(
+      jsonResponse["message"],
+    );
+
+    if (context.mounted) {
+      Utility.progressLoadingDialog(
+        context,
+        false,
+      );
+    }
+    if (jsonResponse["status"]) {
+      bookNowResponse = BookNowResponse.fromJson(jsonResponse);
+      String? url = bookNowResponse?.data?.url.toString();
+      debugPrint('>>>>>>>url>>>>>>>${url}<<<<<<<<<<<<<<');
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => PaymentDirection(url: url),
+      //   ),
+      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WebViewPage(url: url),
+        ),
+      );
+      setState(() {});
+    }
+  }
+
   @override
   void initState() {
     bookingSummaryApi(context);
+
     super.initState();
   }
 
@@ -68,354 +197,385 @@ class BookingSummaryScreenState extends State<BookingSummaryScreen> {
           style: AppFonts.appText,
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
-          child: Column(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColor.black,
-                  borderRadius: BorderRadius.circular(
-                    11,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      height: 77,
-                      width: 76,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(
-                            11,
-                          ),
-                        ),
+      body: Visibility(
+        visible: !showLoader,
+        replacement: const Center(
+          child: CircularProgressIndicator(
+            color: AppColor.yellow,
+          ),
+        ),
+        child: Visibility(
+          visible: bookingSummaryResponse != null,
+          replacement: Center(
+            child: Text(
+              'No Data Found',
+              style: AppFonts.regular.copyWith(fontSize: 16),
+            ),
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColor.black,
+                      borderRadius: BorderRadius.circular(
+                        11,
                       ),
-                      child: Visibility(
-                        visible:
-                            (bookingSummaryResponse.data?.image?.isNotEmpty ??
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          height: 77,
+                          width: 76,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(
+                                11,
+                              ),
+                            ),
+                          ),
+                          child: Visibility(
+                            visible: (bookingSummaryResponse
+                                    ?.data?.image?.isNotEmpty ??
                                 false),
-                        child: Image.network(
-                          ApiService.imageUrl +
-                              (bookingSummaryResponse.data?.image ?? ''),
-                          fit: BoxFit.fill,
+                            child: Image.network(
+                              ApiService.imageUrl +
+                                  (bookingSummaryResponse?.data?.image ?? ''),
+                              fit: BoxFit.fill,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            (bookingSummaryResponse.data?.name ?? ' '),
-                            style: AppFonts.regular.copyWith(fontSize: 16),
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          Row(
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              SvgPicture.asset(
-                                AppIcon.timerIcon,
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
                               Text(
-                                (bookingSummaryResponse.data?.bookingTime ??
-                                    ''),
-                                style: AppFonts.regular.copyWith(
-                                    fontSize: 14, fontWeight: FontWeight.w500),
+                                (bookingSummaryResponse?.data?.name ?? ' '),
+                                style: AppFonts.regular.copyWith(fontSize: 16),
                               ),
                               const SizedBox(
-                                width: 20,
+                                height: 5,
                               ),
-                              SvgPicture.asset(
-                                AppIcon.calenderIcon,
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Text(
-                                // widget.data.date.toString(),
-                                //'2024-04-19',
-                                DateFormat('dd MMM yyyy').format(
-                                  DateTime.parse(
-                                    bookingSummaryResponse.data?.bookingDate
-                                            .toString() ??
-                                        '',
+                              Row(
+                                children: [
+                                  SvgPicture.asset(
+                                    AppIcon.timerIcon,
                                   ),
-                                ), //  DateTime.now().toString(),
-                                style: AppFonts.regular.copyWith(
-                                    fontSize: 14, fontWeight: FontWeight.w500),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(
+                                    (bookingSummaryResponse
+                                            ?.data?.bookingTime ??
+                                        'N/A'),
+                                    style: AppFonts.regular.copyWith(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  SvgPicture.asset(
+                                    AppIcon.calenderIcon,
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      // bookingSummaryResponse?.data?.bookingDate
+                                      //         .toString() ??
+                                      //     'N/A',
+                                      DateFormat('dd MMM yyyy').format(
+                                          bookingSummaryResponse
+                                                  ?.data?.bookingDate ??
+                                              DateTime.now()),
+                                      //  DateTime.now().toString(),
+                                      style: AppFonts.regular.copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Text(
+                                '\$${bookingSummaryResponse?.data?.subTotal ?? ' '}',
+                                style: AppFonts.yellowFont.copyWith(
+                                    fontSize: 16, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            '\$${bookingSummaryResponse.data?.subTotal ?? ' '}',
-                            style: AppFonts.yellowFont.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                        ],
+                        )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColor.black,
+                      borderRadius: BorderRadius.circular(
+                        11,
                       ),
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColor.black,
-                  borderRadius: BorderRadius.circular(
-                    11,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      AppStrings.salonAddress,
-                      style: AppFonts.yellowFont,
                     ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    Text(
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      (bookingSummaryResponse.data?.address ?? ' '),
-                      style: AppFonts.regular
-                          .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColor.black,
-                  borderRadius: BorderRadius.circular(
-                    11,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          AppStrings.bookingDate,
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
+                        const Text(
+                          AppStrings.salonAddress,
+                          style: AppFonts.yellowFont,
                         ),
                         const SizedBox(
-                          height: 9,
+                          height: 5,
                         ),
                         Text(
-                          AppStrings.bookingTime,
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(
-                          height: 9,
-                        ),
-                        Text(
-                          AppStrings.specialist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          (bookingSummaryResponse?.data?.address ?? ' '),
                           style: AppFonts.regular.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColor.black,
+                      borderRadius: BorderRadius.circular(
+                        11,
+                      ),
+                    ),
+                    child: Row(
                       children: [
-                        Text(
-                          //widget.data.date.toString(),
-                          //'2024-04-19',
-                          DateFormat('dd MMM yyyy').format(
-                            DateTime.parse(
-                              bookingSummaryResponse.data?.bookingDate
-                                      .toString() ??
-                                  '',
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.bookingDate,
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
                             ),
-                          ),
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
+                            const SizedBox(
+                              height: 9,
+                            ),
+                            Text(
+                              AppStrings.bookingTime,
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(
+                              height: 9,
+                            ),
+                            Text(
+                              AppStrings.specialist,
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
                         ),
-                        const SizedBox(
-                          height: 9,
-                        ),
-                        Text(
-                          (bookingSummaryResponse.data?.bookingTime ?? ' '),
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(
-                          height: 9,
-                        ),
-                        Text(
-                          (bookingSummaryResponse.data?.specialist?.name ?? ''),
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
+                        const Spacer(),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              // (bookingSummaryResponse?.data?.bookingDate
+                              //         .toString() ??
+                              //     'N/A'),
+
+                              DateFormat('dd MMM yyyy').format(
+                                bookingSummaryResponse?.data?.bookingDate ??
+                                    DateTime.now(),
+                              ),
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(
+                              height: 9,
+                            ),
+                            Text(
+                              (bookingSummaryResponse?.data?.bookingTime ??
+                                  ' '),
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(
+                              height: 9,
+                            ),
+                            Text(
+                              (bookingSummaryResponse?.data?.specialist?.name ??
+                                  'N/A'),
+                              style: AppFonts.regular.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColor.black,
-                  borderRadius: BorderRadius.circular(
-                    11,
                   ),
-                ),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: bookingSummaryResponse.data?.services?.length,
-                  itemBuilder: (context, index) {
-                    var service = bookingSummaryResponse.data?.services?[index];
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColor.black,
+                      borderRadius: BorderRadius.circular(
+                        11,
+                      ),
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: bookingSummaryResponse?.data?.services?.length,
+                      itemBuilder: (context, index) {
+                        var service =
+                            bookingSummaryResponse?.data?.services?[index];
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (index == 0)
+                              const Text(
+                                AppStrings.services,
+                                style: AppFonts.yellowFont,
+                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  (service?.name ?? ' '),
+                                  style: AppFonts.regular.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '\$${(service?.price ?? ' ')}',
+                                  style: AppFonts.regular.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColor.black,
+                      borderRadius: BorderRadius.circular(
+                        11,
+                      ),
+                    ),
+                    child: Column(
                       children: [
-                        if (index == 0)
-                          const Text(
-                            AppStrings.services,
-                            style: AppFonts.yellowFont,
-                          ),
+                        Row(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppStrings.subTotal,
+                                  style: AppFonts.regular.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(
+                                  height: 9,
+                                ),
+                                Text(
+                                  AppStrings.tax,
+                                  style: AppFonts.regular.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(
+                                  height: 9,
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  (bookingSummaryResponse?.data?.subTotal ??
+                                      ' '),
+                                  style: AppFonts.regular.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(
+                                  height: 9,
+                                ),
+                                Text(
+                                  (bookingSummaryResponse?.data?.tax ?? ' '),
+                                  style: AppFonts.regular.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(
+                                  height: 9,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const Divider(
+                          color: Color(0xff434343),
+                          height: 1,
+                        ),
                         Row(
                           children: [
                             Text(
-                              (service?.name ?? ' '),
+                              AppStrings.total,
                               style: AppFonts.regular.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
                             const Spacer(),
                             Text(
-                              '\$${(service?.price ?? ' ')}',
+                              (bookingSummaryResponse?.data?.total ?? ' '),
                               style: AppFonts.regular.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                       ],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColor.black,
-                  borderRadius: BorderRadius.circular(
-                    11,
+                    ),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppStrings.subTotal,
-                              style: AppFonts.regular.copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(
-                              height: 9,
-                            ),
-                            Text(
-                              AppStrings.tax,
-                              style: AppFonts.regular.copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(
-                              height: 9,
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              (bookingSummaryResponse.data?.subTotal ?? ' '),
-                              style: AppFonts.regular.copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(
-                              height: 9,
-                            ),
-                            Text(
-                              (bookingSummaryResponse.data?.tax ?? ' '),
-                              style: AppFonts.regular.copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(
-                              height: 9,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const Divider(
-                      color: Color(0xff434343),
-                      height: 1,
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          AppStrings.total,
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const Spacer(),
-                        Text(
-                          (bookingSummaryResponse.data?.total ?? ' '),
-                          style: AppFonts.regular.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -423,121 +583,9 @@ class BookingSummaryScreenState extends State<BookingSummaryScreen> {
         title: AppStrings.proceedTOPay,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () {
-          //   bookNowApi(context);
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => const PaymentDirection(),
-          //   ),
-          // );
+          bookNowApi(context);
         },
       ),
     );
-  }
-
-  BookingSummaryResponse bookingSummaryResponse = BookingSummaryResponse();
-
-  Future<void> bookingSummaryApi(BuildContext context) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    try {
-      if (context.mounted) {
-        Utility.progressLoadingDialog(context, true);
-      }
-      var request = {};
-
-      request["shop_id"] = sharedPreferences.getInt('shop_id');
-      request["specialist_id"] = widget.data.specialistId;
-      request["time"] = widget.data.time.toString();
-      request["price"] = widget.data.price.toString();
-      request["service_ids"] = '1,3';
-      request["date"] = widget.data.date.toString();
-
-      var response = await http.post(
-          Uri.parse(
-            ApiService.bookingSummary,
-          ),
-          body: jsonEncode(request),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization':
-                'Bearer ${sharedPreferences.getString("access_Token")}'
-          });
-
-      if (context.mounted) {
-        Utility.progressLoadingDialog(context, false);
-      }
-
-      Map<String, dynamic> jsonResponse = jsonDecode(
-        response.body,
-      );
-      Helper().showToast(
-        jsonResponse['message'],
-      );
-      if (jsonResponse['status'] == true) {
-        bookingSummaryResponse = BookingSummaryResponse.fromJson(jsonResponse);
-
-        setState(() {});
-      }
-    } catch (e) {
-      Helper().showToast(e.toString());
-    }
-  }
-
-  BookNowResponse bookNowResponse = BookNowResponse();
-
-  Future<void> bookNowApi(BuildContext context) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(context, true);
-    }
-
-    var headers = {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer ${sharedPreferences.getString("access_Token")}'
-    };
-    var request = http.MultipartRequest('POST', Uri.parse(ApiService.bookNow));
-
-    request.fields.addAll({
-      'shop_id': sharedPreferences.getInt('shop_id').toString(),
-      'date': widget.data.date.toString(),
-      'time': widget.data.time.toString(),
-      'sub_total': '330',
-      'tax': '82.5',
-      'total': '412.5',
-      'specialist_id': widget.data.specialistId.toString(),
-      'service_ids': '1,3',
-      'note': widget.data.notetext.toString(),
-    });
-    // request.files.add(
-    //   await http.MultipartFile.fromPath(
-    //       'desired_look', (widget.data.image.toString() ?? '')),
-    // );
-    request.headers.addAll(headers);
-
-    http.StreamedResponse response = await request.send();
-
-    setState(
-      () {},
-    );
-    var result = await response.stream.bytesToString();
-
-    var jsonResponse = jsonDecode(result);
-
-    Helper().showToast(
-      jsonResponse["message"],
-    );
-
-    if (context.mounted) {
-      Utility.progressLoadingDialog(
-        context,
-        false,
-      );
-    }
-    if (jsonResponse["status"] == true) {
-      bookingSummaryResponse = BookingSummaryResponse.fromJson(jsonResponse);
-      setState(() {});
-    }
   }
 }

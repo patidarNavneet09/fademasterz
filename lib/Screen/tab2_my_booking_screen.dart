@@ -6,17 +6,16 @@ import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
-import '../Booking/complete_booking_summary.dart';
-import '../Booking/upcoming_booking_details.dart';
+import '../Booking/complete_booking_details.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/helper.dart';
-import '../Utils/utility.dart';
 
 class MyBookingScreen extends StatefulWidget {
   const MyBookingScreen({
@@ -33,8 +32,11 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
   @override
   void initState() {
     // TODO: implement initState
-    myBookingApi(context);
+
     super.initState();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      myBookingApi(context);
+    });
   }
 
   @override
@@ -135,21 +137,21 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                 visible: isVisible == true,
                 replacement: Visibility(
                   visible:
-                      (myBookingResponse.data?.completed?.isNotEmpty ?? false),
+                      (myBookingResponse?.data?.completed?.isNotEmpty ?? false),
                   replacement: const Center(
                     child: Text(
-                      'No UpComing Booking',
+                      'No Completed Booking',
                       style: AppFonts.normalText,
                     ),
                   ),
                   child: ListView.separated(
                     shrinkWrap: true,
-                    itemCount: (myBookingResponse.data?.completed?.length ?? 0),
+                    itemCount:
+                        (myBookingResponse?.data?.completed?.length ?? 0),
                     itemBuilder: (BuildContext context, int index) {
                       var myCompleteBooking =
-                          myBookingResponse.data?.completed?[index];
+                          myBookingResponse?.data?.completed?[index];
 
-                      bookingId = myBookingResponse.data?.completed?[index].id;
                       return DecoratedBox(
                         decoration: BoxDecoration(
                           color: AppColor.black,
@@ -185,16 +187,12 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                     width: 5,
                                   ),
                                   Text(
-                                      // DateTime.parse((myCompleteBooking?.date
-                                      //             .toString() ??
-                                      //         '').)
-                                      //     .toString(),
-                                      DateFormat('dd MMM yyyy')
-                                          .format(DateTime.parse(
-                                        (myCompleteBooking?.date.toString() ??
-                                            ''),
-                                      )),
-                                      style: AppFonts.yellowFont),
+                                    DateFormat('dd MMM yyyy').format(
+                                      (myCompleteBooking?.date ??
+                                          DateTime.now()),
+                                    ),
+                                    style: AppFonts.yellowFont,
+                                  ),
                                 ],
                               ),
                             ),
@@ -285,7 +283,9 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                             ),
                             InkWell(
                               onTap: () async {
-                                Navigator.push(
+                                bookingId = myBookingResponse
+                                    ?.data?.completed?[index].id;
+                                await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => CompleteBookingDetail(
@@ -326,7 +326,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                 ),
                 child: Visibility(
                   visible:
-                      (myBookingResponse.data?.upcoming?.isNotEmpty ?? false),
+                      (myBookingResponse?.data?.upcoming?.isNotEmpty ?? false),
                   replacement: const Center(
                     child: Text(
                       'No UpComing Booking',
@@ -335,9 +335,11 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                   ),
                   child: ListView.separated(
                     shrinkWrap: true,
-                    itemCount: (myBookingResponse.data?.upcoming?.length ?? 0),
+                    itemCount: (myBookingResponse?.data?.upcoming?.length ?? 0),
                     itemBuilder: (BuildContext context, int index) {
-                      var myBooking = myBookingResponse.data?.upcoming?[index];
+                      var myUpcomingBooking =
+                          myBookingResponse?.data?.upcoming?[index];
+
                       return DecoratedBox(
                         decoration: BoxDecoration(
                           color: AppColor.black,
@@ -345,15 +347,15 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                             11,
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 9),
-                          child: Column(
-                            children: [
-                              Row(
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 2),
+                              child: Row(
                                 children: [
                                   Text(
-                                    '#${myBooking?.id ?? ''}',
+                                    '#${myUpcomingBooking?.bookingId ?? ''}',
                                     style: AppFonts.yellowFont.copyWith(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500),
@@ -363,7 +365,8 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                   const SizedBox(
                                     width: 5,
                                   ),
-                                  Text('15:00', style: AppFonts.yellowFont),
+                                  Text((myUpcomingBooking?.startTime ?? ''),
+                                      style: AppFonts.yellowFont),
                                   const SizedBox(
                                     width: 12,
                                   ),
@@ -372,20 +375,41 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                     width: 5,
                                   ),
                                   Text(
-                                      DateFormat('dd MMM yyyy')
-                                          .format(DateTime.now()),
-                                      style: AppFonts.yellowFont),
+                                    DateFormat('dd MMM yyyy').format(
+                                      (myUpcomingBooking?.date ??
+                                          DateTime.now()),
+                                    ),
+                                    style: AppFonts.yellowFont,
+                                  ),
                                 ],
                               ),
-                              Divider(
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: Divider(
                                 color: AppColor.gray.withOpacity(.49),
                               ),
-                              Row(
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              child: Row(
                                 children: [
-                                  Image.asset(
-                                    AppAssets.homeImage,
+                                  Container(
                                     height: 77,
                                     width: 76,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        11,
+                                      ),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Image.network(
+                                      ApiService.imageUrl +
+                                          (myUpcomingBooking?.shopImage ?? ''),
+                                      fit: BoxFit.fill,
+                                    ),
                                   ),
                                   const SizedBox(
                                     width: 10,
@@ -398,7 +422,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                           MainAxisAlignment.start,
                                       children: [
                                         Text(
-                                          AppStrings.shopName,
+                                          (myUpcomingBooking?.shopName ?? ''),
                                           style: AppFonts.regular
                                               .copyWith(fontSize: 16),
                                         ),
@@ -417,7 +441,9 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                               child: Text(
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                'Sector 1, near shop, city center',
+                                                (myUpcomingBooking
+                                                        ?.shopAddress ??
+                                                    ''),
                                                 style: AppFonts.regular
                                                     .copyWith(
                                                         fontSize: 14,
@@ -431,7 +457,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                           height: 5,
                                         ),
                                         Text(
-                                          '\$60',
+                                          '\$ ${myUpcomingBooking?.total ?? ''}',
                                           style: AppFonts.yellowFont,
                                         )
                                       ],
@@ -439,22 +465,29 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                   )
                                 ],
                               ),
-                              SizedBox(
-                                height: 8,
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const BookingSummaryDetail(),
-                                    ),
-                                  );
-                                },
+                            ),
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                bookingId = myBookingResponse
+                                    ?.data?.upcoming?[index].id;
+                                debugPrint(
+                                    '>>>>>>>>>>>>>>${bookingId}<<<<<<<<<<<<<<');
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CompleteBookingDetail(
+                                        bookingId: bookingId),
+                                  ),
+                                );
+                              },
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
                                 child: Container(
                                   height: 28,
-                                  alignment: Alignment.center,
+                                  alignment: Alignment.bottomCenter,
                                   decoration: const BoxDecoration(
                                     color: AppColor.yellow,
                                     borderRadius: BorderRadius.only(
@@ -470,8 +503,8 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -489,44 +522,41 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
     );
   }
 
-  MyBookingResponse myBookingResponse = MyBookingResponse();
+  MyBookingResponse? myBookingResponse;
   Future<void> myBookingApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    try {
-      if (context.mounted) {
-        Utility.progressLoadingDialog(context, true);
-      }
 
-      var request = {};
-      var response = await http.post(
-          Uri.parse(
-            ApiService.myBooking,
-          ),
-          body: jsonEncode(request),
-          headers: {
-            "content-type": "application/json",
-            'Accept': 'application/json',
-            'Authorization':
-                'Bearer ${sharedPreferences.getString("access_Token")}'
-          });
-      Map<String, dynamic> jsonResponse = jsonDecode(
-        response.body,
-      );
+    // if (context.mounted) {
+    //   Utility.progressLoadingDialog(context, true);
+    // }
 
-      if (context.mounted) {
-        Utility.progressLoadingDialog(
-          context,
-          false,
-        );
-      }
-      Helper().showToast(jsonResponse['message']);
-      if (jsonResponse['status'] == true) {
-        myBookingResponse = MyBookingResponse.fromJson(jsonResponse);
+    var request = {};
+    var response = await http.post(
+        Uri.parse(
+          ApiService.myBooking,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          "content-type": "application/json",
+          'Accept': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
 
-        setState(() {});
-      }
-    } catch (e) {
-      Helper().showToast(e.toString());
+    // if (context.mounted) {
+    //   Utility.progressLoadingDialog(
+    //     context,
+    //     false,
+    //   );
+    // }
+    Helper().showToast(jsonResponse['message']);
+    if (jsonResponse['status'] == true) {
+      myBookingResponse = MyBookingResponse.fromJson(jsonResponse);
+
+      setState(() {});
     }
   }
 }

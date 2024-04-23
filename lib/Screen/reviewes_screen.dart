@@ -41,67 +41,69 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           },
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: widget.review?.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        (widget.review?[index].userName ?? ''),
-                        style: AppFonts.regular.copyWith(fontSize: 15),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 5),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColor.yellow,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: widget.review?.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          (widget.review?[index].userName ?? ''),
+                          style: AppFonts.regular.copyWith(fontSize: 15),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 15, vertical: 5),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColor.yellow,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset(
-                              AppIcon.ratingIcon,
-                            ),
-                            SizedBox(
-                              width: 6,
-                            ),
-                            Text(
-                              (widget.review?[index].rating ?? ''),
-                              style: AppFonts.yellowFont,
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                  Text(
-                    (widget.review?[index].comment ?? ''),
-                    style: AppFonts.normalText.copyWith(fontSize: 14),
-                  ),
-                  Text(
-                    DateFormat('dd-MMM-yyyy')
-                        .format(DateTime.parse(
-                          (widget.review?[index].createdAt.toString() ?? ''),
-                        ))
-                        .toString(),
-                    style: AppFonts.normalText
-                        .copyWith(fontSize: 13, color: const Color(0xff989898)),
-                  ),
-                  const Divider(
-                    color: AppColor.dividerColor,
-                  ),
-                ],
-              );
-            }),
+                          child: Row(
+                            children: [
+                              SvgPicture.asset(
+                                AppIcon.ratingIcon,
+                              ),
+                              SizedBox(
+                                width: 6,
+                              ),
+                              Text(
+                                (widget.review?[index].rating ?? ''),
+                                style: AppFonts.yellowFont,
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                    Text(
+                      (widget.review?[index].comment ?? ''),
+                      style: AppFonts.normalText.copyWith(fontSize: 14),
+                    ),
+                    Text(
+                      DateFormat('dd-MMM-yyyy')
+                          .format(DateTime.parse(
+                            (widget.review?[index].createdAt.toString() ?? ''),
+                          ))
+                          .toString(),
+                      style: AppFonts.normalText.copyWith(
+                          fontSize: 13, color: const Color(0xff989898)),
+                    ),
+                    const Divider(
+                      color: AppColor.dividerColor,
+                    ),
+                  ],
+                );
+              }),
+        ),
       ),
     );
   }

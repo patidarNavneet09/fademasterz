@@ -12,7 +12,8 @@ import '../Utils/custom_app_bar.dart';
 import '../Utils/custom_app_button.dart';
 
 class PaymentDirection extends StatefulWidget {
-  const PaymentDirection({super.key});
+  final String? url;
+  const PaymentDirection({super.key, this.url});
 
   @override
   State<PaymentDirection> createState() => PaymentDirectionState();
@@ -249,7 +250,7 @@ class PaymentDirectionState extends State<PaymentDirection> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const BookingSummaryDetail(),
+                                  const UpComingBookingDetail(),
                             ),
                           );
                         },

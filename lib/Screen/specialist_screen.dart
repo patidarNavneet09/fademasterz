@@ -56,7 +56,7 @@ class _SpecialistScreenState extends State<SpecialistScreen> {
             crossAxisCount: 4,
             mainAxisSpacing: 10,
             crossAxisSpacing: 15,
-            childAspectRatio: 0.7,
+            childAspectRatio: 0.5,
           ),
           itemBuilder: (context, index) {
             var specialist = widget.specialist?[index];

@@ -369,50 +369,53 @@ class _ShopDetailState extends State<ShopDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.bg,
-      body: Visibility(
-        visible: (shopDetailModal.data?.name?.isNotEmpty ?? false),
-        replacement: const Center(
-          child: Text(
-            'No Data Found',
-            style: AppFonts.normalText,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              //height: 250,
-              child: Stack(
-                children: [
-                  Image.network(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            //height: 250,
+            child: Stack(
+              children: [
+                Visibility(
+                  visible: (shopDetailModal.data?.image?.isNotEmpty ?? false),
+                  child: Image.network(
                     ApiService.imageUrl + (shopDetailModal.data?.image ?? ''),
                     fit: BoxFit.fill,
                     height: 250,
                     width: MediaQuery.of(context).size.width,
                   ),
-                  Positioned(
-                    left: 15,
-                    top: MediaQuery.of(context).viewPadding.top,
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                            color: AppColor.yellow, shape: BoxShape.circle),
-                        child: SvgPicture.asset(
-                          AppIcon.backIcon,
-                          color: AppColor.black,
-                        ),
+                ),
+                Positioned(
+                  left: 15,
+                  top: MediaQuery.of(context).viewPadding.top,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                          color: AppColor.yellow, shape: BoxShape.circle),
+                      child: SvgPicture.asset(
+                        AppIcon.backIcon,
+                        color: AppColor.black,
                       ),
                     ),
-                  )
-                ],
-              ),
+                  ),
+                )
+              ],
             ),
-            Expanded(
-              child: SingleChildScrollView(
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Visibility(
+                visible: (shopDetailModal.data?.address?.isNotEmpty ?? false),
+                replacement: const Center(
+                  child: Text(
+                    'No Data Found',
+                    style: AppFonts.normalText,
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -464,7 +467,7 @@ class _ShopDetailState extends State<ShopDetail> {
                             width: 10,
                           ),
                           Text(
-                            (shopDetailModal.data?.avgRating == 0)
+                            (shopDetailModal.data?.avgRating) == '0'
                                 ? 'No At Rating'
                                 : (shopDetailModal.data?.avgRating ?? ''),
                             style: AppFonts.regular.copyWith(
@@ -505,7 +508,12 @@ class _ShopDetailState extends State<ShopDetail> {
                                 height: 6,
                               ),
                               Text(
-                                AppStrings.openNow,
+                                (shopDetailModal.data?.shopStartTime ==
+                                            '10:00 AM' ||
+                                        shopDetailModal.data?.shopEndTime ==
+                                            '21:00 PM')
+                                    ? AppStrings.openNow
+                                    : 'Close Now',
                                 style: AppFonts.regular.copyWith(fontSize: 15),
                               )
                             ],
@@ -695,8 +703,8 @@ class _ShopDetailState extends State<ShopDetail> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       bottomNavigationBar: MyAppButton(
         title: AppStrings.bookNow,

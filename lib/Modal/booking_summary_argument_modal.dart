@@ -12,7 +12,9 @@ String bookingSummaryArgumentToJson(BookingSummaryArgument data) =>
 
 class BookingSummaryArgument {
   String? price;
-  int? specialistId;
+  String? shopId;
+  String? specialistId;
+  String? serviceId;
   String? notetext;
   String? image;
   String? date;
@@ -20,7 +22,9 @@ class BookingSummaryArgument {
 
   BookingSummaryArgument({
     this.price,
+    this.shopId,
     this.specialistId,
+    this.serviceId,
     this.notetext,
     this.image,
     this.date,
@@ -30,7 +34,9 @@ class BookingSummaryArgument {
   factory BookingSummaryArgument.fromJson(Map<String, dynamic> json) =>
       BookingSummaryArgument(
         price: json["price"],
+        shopId: json["shopId"],
         specialistId: json["specialistId"],
+        serviceId: json["serviceId"],
         notetext: json["notetext"],
         image: json["image"],
         date: json["date"],
@@ -39,7 +45,9 @@ class BookingSummaryArgument {
 
   Map<String, dynamic> toJson() => {
         "price": price,
+        "shopId": shopId,
         "specialistId": specialistId,
+        "serviceId": serviceId,
         "notetext": notetext,
         "image": image,
         "date": date,
@@ -48,6 +56,6 @@ class BookingSummaryArgument {
 
   @override
   String toString() {
-    return 'BookingSummaryArgument{price: $price, specialistId: $specialistId, notetext: $notetext, image: $image, date: $date, time: $time}';
+    return 'BookingSummaryArgument{price: $price, shopId: $shopId, specialistId: $specialistId, serviceId: $serviceId, notetext: $notetext, image: $image, date: $date, time: $time}';
   }
 }

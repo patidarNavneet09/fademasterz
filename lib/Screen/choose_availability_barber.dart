@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fademasterz/Modal/booking_summary_argument_modal.dart';
 import 'package:fademasterz/Modal/choose_availiabilty_modal.dart';
+import 'package:fademasterz/Modal/shop_service_modal.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
 import 'package:fademasterz/Utils/custom_textfield.dart';
@@ -27,8 +28,10 @@ import 'booking_summary_screen.dart';
 
 class ChooseAvailabilityBarber extends StatefulWidget {
   final String? price;
+  final List<Service?>? selectedServiceList;
 
-  const ChooseAvailabilityBarber({super.key, this.price});
+  const ChooseAvailabilityBarber(
+      {super.key, this.price, required this.selectedServiceList});
 
   @override
   State<ChooseAvailabilityBarber> createState() =>
@@ -56,6 +59,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
 
   final picker = ImagePicker();
   File? _imageFile;
+
   Future getImageFromGallery() async {
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
@@ -498,42 +502,60 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         child: ElevatedButton(
           onPressed: () {
-            int specialistId = (chooseAvailabilityResponse
-                    .data?.availableSpecialist?[selectIndex].id ??
-                specialist?.id);
-            String? time =
-                selectSpecialistTimeResponse.data?[timeSelectIndex].time;
-            String date = DateFormat('yyyy-MM-dd')
-                .format(
-                  DateTime.parse(
-                    _selectedDate.isNotEmpty
-                        ? _selectedDate.toString()
-                        : DateTime.now().toString(),
+            if ((chooseAvailabilityResponse
+                    .data?.availableSpecialist?.isNotEmpty ??
+                false)) {
+              int specialistId = (chooseAvailabilityResponse
+                      .data?.availableSpecialist?[selectIndex].id ??
+                  specialist?.id);
+              String? time =
+                  selectSpecialistTimeResponse.data?[timeSelectIndex].time;
+              String? date = '2024-04-20';
+              date = DateFormat('yyyy-MM-dd')
+                  .format(
+                    DateTime.parse(_selectedDate.isNotEmpty
+                        ? _selectedDate
+                        : DateTime.now().toString()),
+                  )
+                  .toLowerCase();
+
+              String? image = _imageFile?.path.toString();
+              String? price = widget.selectedServiceList
+                      ?.fold(
+                          0,
+                          (previousValue, element) =>
+                              previousValue +
+                              double.parse(element?.price ?? '0').toInt())
+                      .toStringAsFixed(0) ??
+                  '0';
+              List<String> serviceId = [];
+
+              widget.selectedServiceList?.forEach((element) {
+                serviceId.add(element?.id.toString() ?? '0');
+              });
+
+              var data = BookingSummaryArgument(
+                time: time,
+                date: date,
+                shopId: shopId.toString(),
+                price: price,
+                notetext: noteCn.text,
+                specialistId: specialistId.toString(),
+                serviceId: serviceId.join(','),
+                image: image,
+              );
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BookingSummaryScreen(
+                    data: data,
                   ),
-                )
-                .toLowerCase();
-            String text = noteCn.text;
-            String? image = _imageFile?.path.toString();
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BookingSummaryScreen(
-                    data: BookingSummaryArgument(
-                  time: time,
-                  date: date,
-                  price: widget.price,
-                  notetext: noteCn.text,
-                  specialistId: specialistId,
-                  image: image,
-                )),
-              ),
-            );
-
-            // debugPrint('>>>>>>>>>>>>>>${widget.price}<<<<<<<<<<<<<<');
-            // debugPrint('>>>>>>>>>>>>>>${specialistId}<<<<<<<<<<<<<<');
-            // debugPrint('>>>>>>>>>>>>>>${date}<<<<<<<<<<<<<<');
-            // debugPrint('>>>>>>>>>>>>>>${time}<<<<<<<<<<<<<<');
+                ),
+              );
+            } else {
+              Helper().showToast('No Available Specialist');
+            }
 
             // Navigator.push(
             //   context,
@@ -548,7 +570,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
             //         ),
             //   ),
             // );
-            noteCn.clear();
+            // noteCn.clear();
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 16),
@@ -582,14 +604,17 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
   ChooseAvailabilityResponse chooseAvailabilityResponse =
       ChooseAvailabilityResponse();
 
+  int? shopId;
+
   Future<void> _chooseAvailabilityApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     try {
       if (context.mounted) {
         Utility.progressLoadingDialog(context, true);
       }
+      shopId ??= sharedPreferences.getInt('shop_id');
       var request = {};
-      request["shop_id"] = sharedPreferences.getInt('shop_id');
+      request["shop_id"] = shopId;
       request["selected_date"] = DateFormat('yyyy-MM-dd')
           .format(
             DateTime.parse(
@@ -647,6 +672,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
 
   SelectSpecialistTimeResponse selectSpecialistTimeResponse =
       SelectSpecialistTimeResponse();
+
   Future<void> _selectSpecialistTimeApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 

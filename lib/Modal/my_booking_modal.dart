@@ -1,13 +1,13 @@
 // To parse this JSON data, do
 //
-//     final myBookingResponse = myBookingResponseFromJson(jsonString);
+//     final bookingDetailResponse = bookingDetailResponseFromJson(jsonString);
 
 import 'dart:convert';
 
-MyBookingResponse myBookingResponseFromJson(String str) =>
+MyBookingResponse bookingDetailResponseFromJson(String str) =>
     MyBookingResponse.fromJson(json.decode(str));
 
-String myBookingResponseToJson(MyBookingResponse data) =>
+String bookingDetailResponseToJson(MyBookingResponse data) =>
     json.encode(data.toJson());
 
 class MyBookingResponse {
@@ -37,7 +37,7 @@ class MyBookingResponse {
 }
 
 class MyBookingData {
-  List<dynamic>? upcoming;
+  List<UpComing>? upcoming;
   int? upcomingTotalPages;
   List<Completed>? completed;
   int? completedTotalPages;
@@ -52,7 +52,8 @@ class MyBookingData {
   factory MyBookingData.fromJson(Map<String, dynamic> json) => MyBookingData(
         upcoming: json["Upcoming"] == null
             ? []
-            : List<dynamic>.from(json["Upcoming"]!.map((x) => x)),
+            : List<UpComing>.from(
+                json["Upcoming"]!.map((x) => UpComing.fromJson(x))),
         upcomingTotalPages: json["upcoming_total_pages"],
         completed: json["Completed"] == null
             ? []
@@ -62,8 +63,9 @@ class MyBookingData {
       );
 
   Map<String, dynamic> toJson() => {
-        "Upcoming":
-            upcoming == null ? [] : List<dynamic>.from(upcoming!.map((x) => x)),
+        "Upcoming": upcoming == null
+            ? []
+            : List<dynamic>.from(upcoming!.map((x) => x.toJson())),
         "upcoming_total_pages": upcomingTotalPages,
         "Completed": completed == null
             ? []
@@ -94,6 +96,56 @@ class Completed {
   });
 
   factory Completed.fromJson(Map<String, dynamic> json) => Completed(
+        id: json["id"],
+        bookingId: json["booking_id"],
+        date: json["date"] == null ? null : DateTime.parse(json["date"]),
+        startTime: json["start_time"],
+        total: json["total"],
+        shopImage: json["shop_image"],
+        shopName: json["shop_name"],
+        shopAddress: json["shop_address"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "booking_id": bookingId,
+        "date":
+            "${date!.year.toString().padLeft(4, '0')}-${date!.month.toString().padLeft(2, '0')}-${date!.day.toString().padLeft(2, '0')}",
+        "start_time": startTime,
+        "total": total,
+        "shop_image": shopImage,
+        "shop_name": shopName,
+        "shop_address": shopAddress,
+      };
+
+  @override
+  String toString() {
+    return 'Completed{id: $id, bookingId: $bookingId, date: $date, startTime: $startTime, total: $total, shopImage: $shopImage, shopName: $shopName, shopAddress: $shopAddress}';
+  }
+}
+
+class UpComing {
+  int? id;
+  String? bookingId;
+  DateTime? date;
+  String? startTime;
+  String? total;
+  String? shopImage;
+  String? shopName;
+  String? shopAddress;
+
+  UpComing({
+    this.id,
+    this.bookingId,
+    this.date,
+    this.startTime,
+    this.total,
+    this.shopImage,
+    this.shopName,
+    this.shopAddress,
+  });
+
+  factory UpComing.fromJson(Map<String, dynamic> json) => UpComing(
         id: json["id"],
         bookingId: json["booking_id"],
         date: json["date"] == null ? null : DateTime.parse(json["date"]),

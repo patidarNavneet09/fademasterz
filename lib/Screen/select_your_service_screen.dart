@@ -27,6 +27,7 @@ class SelectYourServices extends StatefulWidget {
 class _SelectYourServicesState extends State<SelectYourServices> {
   int selectIndex = 0;
   int? shopWorkServiceId;
+
   @override
   void initState() {
     shopWorkService(context);
@@ -73,9 +74,6 @@ class _SelectYourServicesState extends State<SelectYourServices> {
 
                 return GestureDetector(
                   onTap: () async {
-                    SharedPreferences sharedPreferences =
-                        await SharedPreferences.getInstance();
-
                     shopWorkServiceId = (shopService?.id?.toInt() ?? 0);
 
                     selectIndex = index;
@@ -111,23 +109,25 @@ class _SelectYourServicesState extends State<SelectYourServices> {
             ),
           ),
           Expanded(
-            child: Visibility(
-              visible: (shopServiceModal.data?.services?.isNotEmpty ?? false),
-              replacement: Center(
-                child: Text(
-                  'No Service Available',
-                  style: AppFonts.appText.copyWith(fontSize: 14),
-                ),
-              ),
-              child: ListView.separated(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                itemCount: (shopServiceModal.data?.services?.length ?? 0),
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  var shopService = shopServiceModal.data?.services?[index];
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              itemCount: (shopServiceModal.data?.services?.length ?? 0),
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                var shopService = shopServiceModal.data?.services?[index];
 
-                  return Container(
+                return Visibility(
+                  visible:
+                      (shopServiceModal.data?.services?.isNotEmpty ?? false),
+                  replacement: Center(
+                    child: Text(
+                      'No Service Available',
+                      style: AppFonts.appText.copyWith(
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
                     decoration: BoxDecoration(
@@ -180,12 +180,12 @@ class _SelectYourServicesState extends State<SelectYourServices> {
                         ),
                       ],
                     ),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) =>
-                    const SizedBox(
-                  height: 10,
-                ),
+                  ),
+                );
+              },
+              separatorBuilder: (BuildContext context, int index) =>
+                  const SizedBox(
+                height: 10,
               ),
             ),
           ),
@@ -200,6 +200,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ChooseAvailabilityBarber(
+                      selectedServiceList: selectedServiceList,
                       price: selectedServiceList!
                           .fold(
                               0,
@@ -263,6 +264,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
   }
 
   ShopWorkServiceResponse shopWorkServiceModal = ShopWorkServiceResponse();
+
   Future<void> shopWorkService(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -295,14 +297,18 @@ class _SelectYourServicesState extends State<SelectYourServices> {
       jsonResponse['message'],
     );
     if (jsonResponse['status'] == true) {
-      debugPrint('>>>>>>>>>>>>>>${jsonResponse['data']}<<<<<<<<<<<<<<');
       shopWorkServiceModal = ShopWorkServiceResponse.fromJson(jsonResponse);
-
       setState(() {});
+      if (shopWorkServiceModal.data?.workServices?.isNotEmpty ?? false) {
+        shopWorkServiceId =
+            shopWorkServiceModal.data?.workServices?[selectIndex].id ?? 0;
+        _shopService(context);
+      }
     }
   }
 
   ShopServiceResponse shopServiceModal = ShopServiceResponse();
+
   Future<void> _shopService(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 

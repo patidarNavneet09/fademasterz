@@ -11,16 +11,16 @@ import '../Utils/app_assets.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
 
-class BookingSummaryDetail extends StatefulWidget {
-  const BookingSummaryDetail({
+class UpComingBookingDetail extends StatefulWidget {
+  const UpComingBookingDetail({
     super.key,
   });
 
   @override
-  State<BookingSummaryDetail> createState() => _BookingSummaryDetailState();
+  State<UpComingBookingDetail> createState() => _UpComingBookingDetailState();
 }
 
-class _BookingSummaryDetailState extends State<BookingSummaryDetail> {
+class _UpComingBookingDetailState extends State<UpComingBookingDetail> {
   willPopScop() {
     Navigator.pushAndRemoveUntil(
         context,
@@ -422,9 +422,6 @@ class _BookingSummaryDetailState extends State<BookingSummaryDetail> {
                   ],
                 ),
               ),
-              /*  const SizedBox(
-                height: 121,
-              ),*/
 
               /*     Row(
                 children: [
@@ -904,12 +901,11 @@ class _BookingSummaryDetailState extends State<BookingSummaryDetail> {
                                   ),
                                   MyAppButton(
                                     onPress: () {
-                                      Navigator.of(context).pop();
                                       // Navigator.pushAndRemoveUntil(
                                       //     context,
                                       //     MaterialPageRoute(
                                       //       builder: (context) =>
-                                      //           const BookingSummaryDetail(),
+                                      //           const ChooseAvailabilityBarber(),
                                       //     ),
                                       //     (route) => false);
                                     },
