@@ -429,21 +429,35 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                         strokeWidth: 2,
                         radius: const Radius.circular(5),
                         child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              InkWell(
-                                onTap: () {
-                                  showOptions();
-                                },
-                                child: SvgPicture.asset(AppIcon.cameraIcon1),
-                              ),
-                              const Text(
-                                AppStrings.uploadImage,
-                                style: AppFonts.yellowFont,
-                              )
-                            ],
-                          ),
+                          child: (_imageFile?.path.isNotEmpty ?? false)
+                              ? Container(
+                                  height: 80,
+                                  width: 80,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(11),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Image.file(
+                                    _imageFile ?? File('path'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        showOptions();
+                                      },
+                                      child:
+                                          SvgPicture.asset(AppIcon.cameraIcon1),
+                                    ),
+                                    const Text(
+                                      AppStrings.uploadImage,
+                                      style: AppFonts.yellowFont,
+                                    )
+                                  ],
+                                ),
                         ),
                       ),
                     )
@@ -653,9 +667,9 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
       Map<String, dynamic> jsonResponse = jsonDecode(
         response.body,
       );
-      Helper().showToast(
-        jsonResponse['message'],
-      );
+      // Helper().showToast(
+      //   jsonResponse['message'],
+      // );
       if (jsonResponse['status'] == true) {
         chooseAvailabilityResponse =
             ChooseAvailabilityResponse.fromJson(jsonResponse);
@@ -714,9 +728,9 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
     if (jsonResponse['status'] == true) {
       selectSpecialistTimeResponse =
           SelectSpecialistTimeResponse.fromJson(jsonResponse);

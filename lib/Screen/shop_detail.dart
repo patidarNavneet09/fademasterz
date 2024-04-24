@@ -62,31 +62,32 @@ class _ShopDetailState extends State<ShopDetail> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             children: [
-              Row(
-                children: [
-                  Text(
-                    AppStrings.services,
-                    style: AppFonts.regular.copyWith(fontSize: 16),
-                  ),
-                  const Spacer(),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ServicesScreen(
-                            service: (shopDetailModal.data?.services),
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      AppStrings.seeAll,
-                      style: AppFonts.yellowFont,
+              if (shopDetailModal.data?.services?.isNotEmpty ?? false)
+                Row(
+                  children: [
+                    Text(
+                      AppStrings.services,
+                      style: AppFonts.regular.copyWith(fontSize: 16),
                     ),
-                  )
-                ],
-              ),
+                    const Spacer(),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ServicesScreen(
+                              service: (shopDetailModal.data?.services),
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        AppStrings.seeAll,
+                        style: AppFonts.yellowFont,
+                      ),
+                    )
+                  ],
+                ),
               const Divider(
                 color: AppColor.dividerColor,
                 height: 25,
@@ -141,31 +142,32 @@ class _ShopDetailState extends State<ShopDetail> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             children: [
-              Row(
-                children: [
-                  Text(
-                    AppStrings.gallery,
-                    style: AppFonts.regular.copyWith(fontSize: 16),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GalleryScreen(
-                            gallery: (shopDetailModal.data?.gallery),
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      AppStrings.seeAll,
-                      style: AppFonts.yellowFont,
+              if (shopDetailModal.data?.gallery?.isNotEmpty ?? false)
+                Row(
+                  children: [
+                    Text(
+                      AppStrings.gallery,
+                      style: AppFonts.regular.copyWith(fontSize: 16),
                     ),
-                  )
-                ],
-              ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GalleryScreen(
+                              gallery: (shopDetailModal.data?.gallery),
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        AppStrings.seeAll,
+                        style: AppFonts.yellowFont,
+                      ),
+                    )
+                  ],
+                ),
               const Divider(
                 color: AppColor.dividerColor,
                 height: 25,
@@ -468,7 +470,7 @@ class _ShopDetailState extends State<ShopDetail> {
                           ),
                           Text(
                             (shopDetailModal.data?.avgRating) == '0'
-                                ? 'No At Rating'
+                                ? 'No Rating Yet'
                                 : (shopDetailModal.data?.avgRating ?? ''),
                             style: AppFonts.regular.copyWith(
                                 fontSize: 15, fontWeight: FontWeight.w500),
@@ -508,12 +510,7 @@ class _ShopDetailState extends State<ShopDetail> {
                                 height: 6,
                               ),
                               Text(
-                                (shopDetailModal.data?.shopStartTime ==
-                                            '10:00 AM' ||
-                                        shopDetailModal.data?.shopEndTime ==
-                                            '21:00 PM')
-                                    ? AppStrings.openNow
-                                    : 'Close Now',
+                                _shopStatus,
                                 style: AppFonts.regular.copyWith(fontSize: 15),
                               )
                             ],
@@ -573,7 +570,11 @@ class _ShopDetailState extends State<ShopDetail> {
                               setState(() {});
                             },
                             child: Text(
-                              AppStrings.seeAll,
+                              (shopDetailModal
+                                          .data?.ourSpecialist?.isNotEmpty ??
+                                      false)
+                                  ? AppStrings.seeAll
+                                  : '',
                               style: AppFonts.yellowFont.copyWith(
                                 fontSize: 16,
                               ),
@@ -717,11 +718,45 @@ class _ShopDetailState extends State<ShopDetail> {
               builder: (context) => const SelectYourServices(),
             ),
           );
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => const WebViewXPage(),
+          //   ),
+          // );
         },
       ),
     );
   }
 
+  String _shopStatus = 'Loading...';
+  String _updateShopStatus(String openTime, String closeTime) {
+    // Get the current time
+
+    DateTime ct = DateTime.now();
+    // Format opening and closing times as DateTime objects
+    DateTime openDateTime = DateFormat.Hm().parse(openTime);
+
+    DateTime closeDateTime = DateFormat.Hm().parse(closeTime);
+    DateTime currentTime = DateTime(openDateTime.year, openDateTime.month,
+        openDateTime.day, ct.hour, ct.minute, ct.second);
+
+    // Compare the current time with the opening and closing times
+    if (currentTime.isAfter(openDateTime) &&
+        currentTime.isBefore(closeDateTime)) {
+      _shopStatus = 'Open Now';
+      setState(() {});
+    } else {
+      setState(() {
+        _shopStatus = 'Closed Now ';
+      });
+    }
+
+    return _shopStatus;
+  }
+
+  String? openTime;
+  String? closeTime;
   ShopDetailModal shopDetailModal = ShopDetailModal();
   Future<void> shopDetail(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
@@ -752,11 +787,14 @@ class _ShopDetailState extends State<ShopDetail> {
       Map<String, dynamic> jsonResponse = jsonDecode(
         response.body,
       );
-      Helper().showToast(
-        jsonResponse['message'],
-      );
+      // Helper().showToast(
+      //   jsonResponse['message'],
+      // );
       if (jsonResponse['status'] == true) {
         shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
+        openTime = shopDetailModal.data?.shopStartTime;
+        closeTime = shopDetailModal.data?.shopEndTime;
+        _updateShopStatus(openTime!, closeTime!);
         setState(() {});
       }
     } catch (e) {

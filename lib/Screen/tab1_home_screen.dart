@@ -324,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 15,
               ),
               Text(
-                '${(homePageModal.data?.totalShops ?? '')} Shop available',
+                '${(homePageModal.data?.totalShops ?? '')} Shops available',
                 style: AppFonts.text.copyWith(
                   fontSize: 16,
                   color: AppColor.yellow,
@@ -334,14 +334,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 visible: (homePageModal.data?.shops?.isNotEmpty ?? false),
                 replacement: Center(
                   child: Text(
-                    'No Shop Found',
+                    (homePageModal.data?.shops?.isNotEmpty ?? false)
+                        ? 'No Shop Found'
+                        : '',
                     textAlign: TextAlign.center,
                     style: AppFonts.appText.copyWith(fontSize: 14),
                   ),
                 ),
                 child: Expanded(
                   child: ListView.separated(
-                    // physics: const NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
                     itemCount: (homePageModal.data?.shops?.length ?? 1),
                     padding: const EdgeInsets.only(top: 15),
@@ -418,7 +420,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 10,
                                         ),
                                         Text(
-                                          (item?.avgRating ?? ''),
+                                          (item?.avgRating) == '0'
+                                              ? 'No Rating Yet'
+                                              : (item?.avgRating ?? ''),
                                           style: AppFonts.regular.copyWith(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500),
@@ -526,9 +530,9 @@ class _HomeScreenState extends State<HomeScreen> {
       Map<String, dynamic> jsonResponse = jsonDecode(
         response.body,
       );
-      Helper().showToast(
-        jsonResponse['message'],
-      );
+      // Helper().showToast(
+      //   jsonResponse['message'],
+      // );
       sharedPreferences.setBool("profileSetUp", true);
       if (jsonResponse['status'] == true) {
         homePageModal = HomePageModal.fromJson(jsonResponse);

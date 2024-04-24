@@ -49,40 +49,49 @@ class _SpecialistScreenState extends State<SpecialistScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: GridView.builder(
-          shrinkWrap: true,
-          itemCount: widget.specialist?.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 15,
-            childAspectRatio: 0.5,
+        child: Visibility(
+          visible: (widget.specialist?.isNotEmpty ?? false),
+          replacement: Center(
+            child: Text(
+              'No Specialist Found',
+              style: AppFonts.appText.copyWith(fontSize: 14),
+            ),
           ),
-          itemBuilder: (context, index) {
-            var specialist = widget.specialist?[index];
+          child: GridView.builder(
+            shrinkWrap: true,
+            itemCount: widget.specialist?.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 15,
+              childAspectRatio: 0.5,
+            ),
+            itemBuilder: (context, index) {
+              var specialist = widget.specialist?[index];
 
-            return InkWell(
-              onTap: () {},
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(35),
-                    child: Image.network(
-                      ApiService.imageUrl + (specialist?.image ?? ''),
-                      height: 65,
-                      width: 65,
-                      fit: BoxFit.fill,
+              return InkWell(
+                onTap: () {},
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(35),
+                      child: Image.network(
+                        ApiService.imageUrl + (specialist?.image ?? ''),
+                        height: 65,
+                        width: 65,
+                        fit: BoxFit.fill,
+                      ),
                     ),
-                  ),
-                  Text(
-                    textAlign: TextAlign.center,
-                    (specialist?.name ?? ''),
-                    style: AppFonts.normalText.copyWith(fontSize: 14),
-                  )
-                ],
-              ),
-            );
-          },
+                    Text(
+                      textAlign: TextAlign.center,
+                      (specialist?.name ?? ''),
+                      style: AppFonts.normalText.copyWith(fontSize: 14),
+                    )
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

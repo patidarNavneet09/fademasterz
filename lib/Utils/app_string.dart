@@ -55,6 +55,7 @@ class AppStrings {
   static const String gotIt = 'Got it!';
   static const String rescheduleBooking = 'Reschedule Booking';
   static const String cancelBooking = 'Cancel Booking';
+  static const String cancelledSuccessfully = 'Cancelled Successfully';
   static const String viewDetails = 'View Details';
   static const String yes = 'Yes';
   static const String clearAll = 'Clear all';

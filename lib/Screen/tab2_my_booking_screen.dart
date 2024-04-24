@@ -15,7 +15,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../ApiService/api_service.dart';
 import '../Booking/complete_booking_details.dart';
 import '../Utils/app_assets.dart';
-import '../Utils/helper.dart';
 
 class MyBookingScreen extends StatefulWidget {
   const MyBookingScreen({
@@ -552,7 +551,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
     //     false,
     //   );
     // }
-    Helper().showToast(jsonResponse['message']);
+    // Helper().showToast(jsonResponse['message']);
     if (jsonResponse['status'] == true) {
       myBookingResponse = MyBookingResponse.fromJson(jsonResponse);
 

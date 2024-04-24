@@ -79,21 +79,26 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
             style: AppFonts.appText,
           ),
         ),
-        body: SingleChildScrollView(
-          child: Visibility(
-            visible: !showLoader,
-            replacement: const Center(
-              child: CircularProgressIndicator(
-                color: AppColor.yellow,
-              ),
+        body: Visibility(
+          visible: !showLoader,
+          replacement: const Center(
+            child: CircularProgressIndicator(
+              color: AppColor.yellow,
             ),
+          ),
+          child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 15,
+                vertical: 8,
+              ),
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 10),
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColor.black,
                       borderRadius: BorderRadius.circular(
@@ -726,7 +731,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                           showModalBottomSheet(
                             backgroundColor: Colors.transparent,
                             context: context,
-                            builder: (context) {
+                            builder: (ctx) {
                               return Container(
                                 height: 230,
                                 decoration: const BoxDecoration(
@@ -752,7 +757,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                                           width: 21,
                                           child: InkWell(
                                             onTap: () {
-                                              Navigator.pop(context);
+                                              Navigator.pop(ctx);
                                             },
                                             child: const Icon(
                                               Icons.cancel,
@@ -792,7 +797,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                                           Expanded(
                                             child: MyAppButton(
                                               onPress: () {
-                                                Navigator.pop(context);
+                                                Navigator.pop(ctx);
                                               },
                                               border: Border.all(
                                                   color: AppColor.yellow),
@@ -842,48 +847,34 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                                                                 vertical: 10),
                                                         child: Column(
                                                           children: [
-                                                            Row(
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .spaceBetween,
-                                                              children: [
-                                                                const SizedBox
-                                                                    .shrink(),
-                                                                Text(
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .center,
-                                                                  AppStrings
-                                                                      .alert,
-                                                                  style: AppFonts
-                                                                      .redFont,
-                                                                ),
-                                                                SizedBox(
-                                                                  height: 21,
-                                                                  width: 21,
+                                                            Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .topRight,
+                                                              child: SizedBox(
+                                                                height: 21,
+                                                                width: 21,
+                                                                child: InkWell(
+                                                                  onTap: () {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                  },
                                                                   child:
-                                                                      InkWell(
-                                                                    onTap: () {
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                    child:
-                                                                        const Icon(
-                                                                      Icons
-                                                                          .cancel,
-                                                                      color: AppColor
-                                                                          .yellow,
-                                                                    ),
+                                                                      const Icon(
+                                                                    Icons
+                                                                        .cancel,
+                                                                    color: AppColor
+                                                                        .yellow,
                                                                   ),
                                                                 ),
-                                                              ],
+                                                              ),
                                                             ),
                                                             const SizedBox(
                                                               height: 8,
                                                             ),
                                                             const Text(
                                                               AppStrings
-                                                                  .cancelBooking,
+                                                                  .cancelledSuccessfully,
                                                               style: AppFonts
                                                                   .appText,
                                                             ),
@@ -942,7 +933,11 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                                                     );
                                                   },
                                                 );*/
+                                                Navigator.pop(ctx);
+
                                                 cancelBookingApi(context);
+                                                // Navigator.popUntil(
+                                                //     context, (route) => false);
                                               },
                                               radius: 6,
                                               height: 50,
@@ -999,16 +994,13 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
               'Bearer ${sharedPreferences.getString("access_Token")}'
         });
 
-    // if (context.mounted) {
-    //   Utility.progressLoadingDialog(context, false);
-    // }
     setLoader(false);
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
     if (jsonResponse['status']) {
       bookingDetailResponse = BookingDetailResponse.fromJson(jsonResponse);
 
@@ -1060,9 +1052,6 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
   Future<void> cancelBookingApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
-    // if (context.mounted) {
-    //   Utility.progressLoadingDialog(context, true);
-    // }
     var request = {};
 
     request["booking_id"] = widget.bookingId;
@@ -1079,104 +1068,124 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
               'Bearer ${sharedPreferences.getString("access_Token")}'
         });
 
-    // if (context.mounted) {
-    //   Utility.progressLoadingDialog(context, false);
-    // }
-
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+
     if (jsonResponse['status'] == true) {
-      showModalBottomSheet(
-        backgroundColor: Colors.transparent,
+      bookingDetailApi(context);
+    }
+    _showBottamSheet(
         context: context,
-        builder: (context) {
-          return Container(
-            height: 230,
-            decoration: const BoxDecoration(
-              color: AppColor.bg,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(
-                  20,
-                ),
-                topRight: Radius.circular(
-                  20,
-                ),
+        description: jsonResponse["message"],
+        isSuccess: jsonResponse['status']);
+  }
+
+  Future _showBottamSheet({
+    required BuildContext context,
+    required String description,
+    required bool isSuccess,
+  }) async {
+    return await showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (ctx) {
+        return Container(
+          height: 230,
+          decoration: const BoxDecoration(
+            color: AppColor.bg,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(
+                20,
+              ),
+              topRight: Radius.circular(
+                20,
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const SizedBox.shrink(),
-                      Text(
-                        textAlign: TextAlign.center,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      height: 21,
+                      width: 21,
+                    ),
+                    Visibility(
+                      visible: !isSuccess,
+                      child: Text(
                         AppStrings.alert,
                         style: AppFonts.redFont,
                       ),
-                      SizedBox(
-                        height: 21,
-                        width: 21,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Icon(
-                            Icons.cancel,
-                            color: AppColor.yellow,
-                          ),
+                    ),
+                    SizedBox(
+                      height: 21,
+                      width: 21,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                        },
+                        child: const Icon(
+                          Icons.cancel,
+                          color: AppColor.yellow,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  const Text(
-                    AppStrings.cancelBooking,
-                    style: AppFonts.appText,
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 35),
-                    child: Text(
-                      textAlign: TextAlign.center,
-                      jsonResponse['message'],
-                      style: AppFonts.normalText.copyWith(fontSize: 15),
                     ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                Text(
+                  isSuccess
+                      ? AppStrings.cancelledSuccessfully
+                      : AppStrings.cancelBooking,
+                  style: AppFonts.appText,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 35),
+                  child: Text(
+                    textAlign: TextAlign.center,
+                    description,
+                    style: AppFonts.normalText.copyWith(fontSize: 15),
                   ),
-                  const SizedBox(
-                    height: 14,
-                  ),
-                  const Divider(
-                    color: AppColor.dividerColor,
-                  ),
-                  MyAppButton(
-                    onPress: () {
-                      Navigator.of(context).pop();
-                    },
-                    title: AppStrings.gotIt,
-                    style: AppFonts.blackFont.copyWith(
-                        color: AppColor.bg, fontWeight: FontWeight.w500),
-                    radius: 7,
-                    height: 50,
-                    width: 128,
-                  )
-                ],
-              ),
+                ),
+                const SizedBox(
+                  height: 14,
+                ),
+                const Divider(
+                  color: AppColor.dividerColor,
+                ),
+                MyAppButton(
+                  onPress: () {
+                    isSuccess
+                        ? Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DashBoardScreen(selectIndex: 1),
+                            ),
+                            (route) => false)
+                        : Navigator.of(ctx).pop();
+                  },
+                  title: AppStrings.gotIt,
+                  style: AppFonts.blackFont.copyWith(
+                      color: AppColor.bg, fontWeight: FontWeight.w500),
+                  radius: 7,
+                  height: 50,
+                  width: 128,
+                )
+              ],
             ),
-          );
-        },
-      );
-      setState(() {});
-    }
+          ),
+        );
+      },
+    );
   }
 }

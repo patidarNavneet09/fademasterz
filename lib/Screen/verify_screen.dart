@@ -21,6 +21,7 @@ import '../Utils/utility.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String? phoneNo;
+
   const VerifyScreen({super.key, this.phoneNo});
 
   @override
@@ -32,6 +33,39 @@ class _VerifyScreenState extends State<VerifyScreen> {
   TextEditingController otpTextFieldCn = TextEditingController();
   StreamController<ErrorAnimationType>? errorController;
   String currentText = "";
+
+  Future<void> resendOtp(BuildContext context) async {
+    Utility.progressLoadingDialog(context, true);
+    var request = {};
+    request["country_code"] = "91";
+    request['mobile_number'] = widget.phoneNo;
+
+    var response = await http.post(
+      Uri.parse(
+        ApiService.enterNumber,
+      ),
+      body: jsonEncode(request),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    Helper().showToast(
+      jsonResponse['message'],
+    );
+
+    if (jsonResponse['status']) {
+      mobileStarttimer();
+    }
+  }
+
   snackBar(String? message) {
     return ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -42,8 +76,10 @@ class _VerifyScreenState extends State<VerifyScreen> {
   }
 
   Timer? optTimer;
-  int mobileOtpSecondsRemaining = 30;
+  int mobileOtpSecondsRemaining = 60;
+
   void mobileStarttimer() {
+    mobileOtpSecondsRemaining = 60;
     optTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) {
@@ -116,7 +152,8 @@ class _VerifyScreenState extends State<VerifyScreen> {
               height: 40,
             ),
             PinCodeTextField(
-              appContext: context, textStyle: AppFonts.textFieldFont,
+              appContext: context,
+              textStyle: AppFonts.textFieldFont,
               length: 4,
               obscureText: true,
               //obscuringCharacter: '*',
@@ -178,7 +215,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SvgPicture.asset(AppIcon.clockIcon),
-                SizedBox(
+                const SizedBox(
                   width: 10,
                 ),
                 Text(
@@ -204,12 +241,14 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    snackBar('resend');
+                    resendOtp(context);
                   },
                   child: Text(
                     AppStrings.resend,
                     style: AppFonts.text1.copyWith(
-                      color: AppColor.yellow,
+                      color: mobileOtpSecondsRemaining == 0
+                          ? AppColor.yellow
+                          : AppColor.gray,
                     ),
                   ),
                 ),
@@ -245,6 +284,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
   bool? profileSetUp = false;
   VerifyOtpModal verifyOtpModal = VerifyOtpModal();
+
   Future<void> verifyOtp(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     // profileSetUp = sharedPreferences.getBool('profileSetUp');

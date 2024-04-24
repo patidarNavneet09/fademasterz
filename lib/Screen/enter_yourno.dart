@@ -28,7 +28,7 @@ class EnterYourNo extends StatefulWidget {
 class _EnterYourNoState extends State<EnterYourNo> {
   TextEditingController phoneCn = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  late ConnectivityResult connectivityResult;
+  late ConnectivityResult _connectionStatus;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,9 +92,30 @@ class _EnterYourNoState extends State<EnterYourNo> {
       floatingActionButton: MyAppButton(
         title: AppStrings.next,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        onPress: () {
+        onPress: () async {
           if (isValidate()) {
             enterNumberApi(context);
+            //     final connectivityResult =
+            //         await (Connectivity().checkConnectivity());
+            //     setState(() {
+            //       _connectionStatus = connectivityResult;
+            //     });
+            //     if (_connectionStatus == ConnectivityResult.wifi) {
+            //       if (context.mounted) {
+            //         enterNumberApi(context);
+            //       }
+            //     } else if (_connectionStatus == ConnectivityResult.mobile) {
+            //       if (context.mounted) {
+            //         enterNumberApi(context);
+            //       }
+            //     } else {
+            //       if (context.mounted) {
+            //         Utility.showNoNetworkDialog(
+            //           context,
+            //         );
+            //       }
+            //     }
+            //     enterNumberApi(context);
           }
         },
       ),

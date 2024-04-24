@@ -27,6 +27,12 @@ class SelectYourServices extends StatefulWidget {
 class _SelectYourServicesState extends State<SelectYourServices> {
   int selectIndex = 0;
   int? shopWorkServiceId;
+  bool isDataLoading = false;
+
+  void setLoader(bool value) {
+    isDataLoading = value;
+    setState(() {});
+  }
 
   @override
   void initState() {
@@ -109,25 +115,28 @@ class _SelectYourServicesState extends State<SelectYourServices> {
             ),
           ),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              itemCount: (shopServiceModal.data?.services?.length ?? 0),
-              shrinkWrap: true,
-              itemBuilder: (context, index) {
-                var shopService = shopServiceModal.data?.services?[index];
-
-                return Visibility(
-                  visible:
-                      (shopServiceModal.data?.services?.isNotEmpty ?? false),
-                  replacement: Center(
-                    child: Text(
-                      'No Service Available',
-                      style: AppFonts.appText.copyWith(
-                        fontSize: 14,
-                      ),
+            child: Visibility(
+              visible: (shopServiceModal.data?.services?.isNotEmpty ?? false),
+              replacement: Center(
+                child: Visibility(
+                  visible: !isDataLoading,
+                  child: Text(
+                    'No Service Available',
+                    style: AppFonts.appText.copyWith(
+                      fontSize: 14,
                     ),
                   ),
-                  child: Container(
+                ),
+              ),
+              child: ListView.separated(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                itemCount: (shopServiceModal.data?.services?.length ?? 0),
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  var shopService = shopServiceModal.data?.services?[index];
+
+                  return Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
                     decoration: BoxDecoration(
@@ -180,12 +189,12 @@ class _SelectYourServicesState extends State<SelectYourServices> {
                         ),
                       ],
                     ),
-                  ),
-                );
-              },
-              separatorBuilder: (BuildContext context, int index) =>
-                  const SizedBox(
-                height: 10,
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) =>
+                    const SizedBox(
+                  height: 10,
+                ),
               ),
             ),
           ),
@@ -266,11 +275,13 @@ class _SelectYourServicesState extends State<SelectYourServices> {
   ShopWorkServiceResponse shopWorkServiceModal = ShopWorkServiceResponse();
 
   Future<void> shopWorkService(BuildContext context) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    setLoader(true);
 
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     if (context.mounted) {
       Utility.progressLoadingDialog(context, true);
     }
+
     var request = {};
     request["shop_id"] = sharedPreferences.getInt('shop_id');
 
@@ -285,6 +296,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
           'Authorization':
               'Bearer ${sharedPreferences.getString("access_Token")}'
         });
+    setLoader(false);
 
     if (context.mounted) {
       Utility.progressLoadingDialog(context, false);
@@ -293,9 +305,9 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
     if (jsonResponse['status'] == true) {
       shopWorkServiceModal = ShopWorkServiceResponse.fromJson(jsonResponse);
       setState(() {});
@@ -310,11 +322,14 @@ class _SelectYourServicesState extends State<SelectYourServices> {
   ShopServiceResponse shopServiceModal = ShopServiceResponse();
 
   Future<void> _shopService(BuildContext context) async {
+    setLoader(true);
+
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
     if (context.mounted) {
       Utility.progressLoadingDialog(context, true);
     }
+
     var request = {};
 
     request["shop_id"] = sharedPreferences.getInt('shop_id');
@@ -332,6 +347,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
           'Authorization':
               'Bearer ${sharedPreferences.getString("access_Token")}'
         });
+    setLoader(false);
 
     if (context.mounted) {
       Utility.progressLoadingDialog(context, false);
@@ -340,9 +356,9 @@ class _SelectYourServicesState extends State<SelectYourServices> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
     if (jsonResponse['status'] == true) {
       shopServiceModal = ShopServiceResponse.fromJson(jsonResponse);
 

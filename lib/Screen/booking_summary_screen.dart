@@ -5,7 +5,6 @@ import 'package:fademasterz/Screen/web_view_page.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
-import 'package:fademasterz/Utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
+import '../Dashboard/dashboard.dart';
 import '../Modal/book_now_modal.dart';
 import '../Modal/booking_summary_modal.dart';
 import '../Utils/app_assets.dart';
@@ -80,9 +80,9 @@ class BookingSummaryScreenState extends State<BookingSummaryScreen> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
     if (jsonResponse['status']) {
       bookingSummaryResponse = BookingSummaryResponse.fromJson(jsonResponse);
 
@@ -138,9 +138,9 @@ class BookingSummaryScreenState extends State<BookingSummaryScreen> {
 
     var jsonResponse = jsonDecode(result);
 
-    Helper().showToast(
-      jsonResponse["message"],
-    );
+    // Helper().showToast(
+    //   jsonResponse["message"],
+    // );
 
     if (context.mounted) {
       Utility.progressLoadingDialog(
@@ -151,7 +151,7 @@ class BookingSummaryScreenState extends State<BookingSummaryScreen> {
     if (jsonResponse["status"]) {
       bookNowResponse = BookNowResponse.fromJson(jsonResponse);
       String? url = bookNowResponse?.data?.url.toString();
-      debugPrint('>>>>>>>url>>>>>>>${url}<<<<<<<<<<<<<<');
+
       // Navigator.push(
       //   context,
       //   MaterialPageRoute(
@@ -161,9 +161,106 @@ class BookingSummaryScreenState extends State<BookingSummaryScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => WebViewPage(url: url),
+          builder: (context) => WebViewPage(url: url.toString()),
         ),
-      );
+      ).then((value) {
+        if (value != null && value) {
+          return showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (ctx) {
+              return WillPopScope(
+                onWillPop: () async => false,
+                child: Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      17,
+                    ),
+                  ),
+                  insetPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 38, vertical: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset(AppIcon.paymentIcon),
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 20),
+                          child: Text(
+                            textAlign: TextAlign.center,
+                            AppStrings.paymentSuccessful,
+                            style: AppFonts.blackFont.copyWith(
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            textAlign: TextAlign.center,
+                            AppStrings.successfulDone,
+                            style: AppFonts.blackFont.copyWith(
+                                fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 16,
+                        ),
+                        MyAppButton(
+                          onPress: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const DashBoardScreen(selectIndex: 1),
+                              ),
+                            );
+                          },
+                          height: 48,
+                          title: AppStrings.viewBookingSummary,
+                          style: AppFonts.blackFont
+                              .copyWith(fontWeight: FontWeight.w500),
+                          radius: 39,
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        MyAppButton(
+                          onPress: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DashBoardScreen(
+                                  selectIndex: 0,
+                                ),
+                              ),
+                              (route) => false,
+                            );
+                          },
+                          height: 48,
+                          title: AppStrings.backToHome,
+                          style: AppFonts.blackFont
+                              .copyWith(fontWeight: FontWeight.w500),
+                          radius: 39,
+                          color: const Color(0xffFFFBF0),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        }
+      });
       setState(() {});
     }
   }
@@ -199,9 +296,12 @@ class BookingSummaryScreenState extends State<BookingSummaryScreen> {
       ),
       body: Visibility(
         visible: !showLoader,
-        replacement: const Center(
-          child: CircularProgressIndicator(
-            color: AppColor.yellow,
+        replacement: Center(
+          child: Container(
+            alignment: Alignment.center,
+            child: const CircularProgressIndicator(
+              color: AppColor.yellow,
+            ),
           ),
         ),
         child: Visibility(
