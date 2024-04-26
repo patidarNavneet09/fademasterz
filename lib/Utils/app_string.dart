@@ -60,6 +60,7 @@ class AppStrings {
   static const String yes = 'Yes';
   static const String clearAll = 'Clear all';
   static const String no = 'No';
+  static const String cancelledBookings = 'Cancelled Bookings';
   static const String reviews = 'Reviews';
   static const String chatNow = 'Chat Now';
   static const String reschedule = 'Reschedule';

@@ -31,11 +31,10 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
   @override
   void initState() {
     // TODO: implement initState
-
-    super.initState();
     SchedulerBinding.instance.addPostFrameCallback((_) {
       myBookingApi(context);
     });
+    super.initState();
   }
 
   @override
@@ -131,18 +130,18 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
             const SizedBox(
               height: 20,
             ),
-            Expanded(
-              child: Visibility(
-                visible: isVisible == true,
-                replacement: Visibility(
-                  visible:
-                      (myBookingResponse?.data?.completed?.isNotEmpty ?? false),
-                  replacement: const Center(
-                    child: Text(
-                      'No Completed Booking',
-                      style: AppFonts.normalText,
-                    ),
+            Visibility(
+              visible: isVisible == true,
+              replacement: Visibility(
+                visible:
+                    (myBookingResponse?.data?.completed?.isNotEmpty ?? false),
+                replacement: const Center(
+                  child: Text(
+                    'No Completed Booking',
+                    style: AppFonts.normalText,
                   ),
+                ),
+                child: Expanded(
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount:
@@ -323,194 +322,187 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                     ),
                   ),
                 ),
-                child: Visibility(
-                  visible:
-                      (myBookingResponse?.data?.upcoming?.isNotEmpty ?? false),
-                  replacement: const Center(
-                    child: Text(
-                      'No UpComing Booking',
-                      style: AppFonts.normalText,
-                    ),
+              ),
+              child: Visibility(
+                visible:
+                    (myBookingResponse?.data?.upcoming?.isNotEmpty ?? false),
+                replacement: const Center(
+                  child: Text(
+                    'No UpComing Booking',
+                    style: AppFonts.normalText,
                   ),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: (myBookingResponse?.data?.upcoming?.length ?? 0),
-                    itemBuilder: (BuildContext context, int index) {
-                      var myUpcomingBooking =
-                          myBookingResponse?.data?.upcoming?[index];
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: (myBookingResponse?.data?.upcoming?.length ?? 0),
+                  itemBuilder: (BuildContext context, int index) {
+                    var myUpcomingBooking =
+                        myBookingResponse?.data?.upcoming?[index];
 
-                      return DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: AppColor.black,
-                          borderRadius: BorderRadius.circular(
-                            11,
-                          ),
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColor.black,
+                        borderRadius: BorderRadius.circular(
+                          11,
                         ),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 2),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '#${myUpcomingBooking?.bookingId ?? ''}',
-                                    style: AppFonts.yellowFont.copyWith(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500),
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 2),
+                            child: Row(
+                              children: [
+                                Text(
+                                  '#${myUpcomingBooking?.bookingId ?? ''}',
+                                  style: AppFonts.yellowFont.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                const Spacer(),
+                                SvgPicture.asset(AppIcon.timerIcon),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                Text((myUpcomingBooking?.startTime ?? ''),
+                                    style: AppFonts.yellowFont),
+                                const SizedBox(
+                                  width: 12,
+                                ),
+                                SvgPicture.asset(AppIcon.calenderIcon),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                Text(
+                                  DateFormat('dd MMM yyyy').format(
+                                    (myUpcomingBooking?.date ?? DateTime.now()),
                                   ),
-                                  const Spacer(),
-                                  SvgPicture.asset(AppIcon.timerIcon),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
-                                  Text((myUpcomingBooking?.startTime ?? ''),
-                                      style: AppFonts.yellowFont),
-                                  const SizedBox(
-                                    width: 12,
-                                  ),
-                                  SvgPicture.asset(AppIcon.calenderIcon),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
-                                  Text(
-                                    DateFormat('dd MMM yyyy').format(
-                                      (myUpcomingBooking?.date ??
-                                          DateTime.now()),
+                                  style: AppFonts.yellowFont,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Divider(
+                              color: AppColor.gray.withOpacity(.49),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            child: Row(
+                              children: [
+                                Container(
+                                  height: 77,
+                                  width: 76,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      11,
                                     ),
-                                    style: AppFonts.yellowFont,
                                   ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10),
-                              child: Divider(
-                                color: AppColor.gray.withOpacity(.49),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    height: 77,
-                                    width: 76,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        11,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Image.network(
+                                    ApiService.imageUrl +
+                                        (myUpcomingBooking?.shopImage ?? ''),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        (myUpcomingBooking?.shopName ?? ''),
+                                        style: AppFonts.regular
+                                            .copyWith(fontSize: 16),
                                       ),
-                                    ),
-                                    clipBehavior: Clip.antiAlias,
-                                    child: Image.network(
-                                      ApiService.imageUrl +
-                                          (myUpcomingBooking?.shopImage ?? ''),
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          (myUpcomingBooking?.shopName ?? ''),
-                                          style: AppFonts.regular
-                                              .copyWith(fontSize: 16),
-                                        ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        Row(
-                                          children: [
-                                            SvgPicture.asset(
-                                              AppIcon.locationIcon,
+                                      const SizedBox(
+                                        height: 5,
+                                      ),
+                                      Row(
+                                        children: [
+                                          SvgPicture.asset(
+                                            AppIcon.locationIcon,
+                                          ),
+                                          const SizedBox(
+                                            width: 10,
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              (myUpcomingBooking?.shopAddress ??
+                                                  ''),
+                                              style: AppFonts.regular.copyWith(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500),
                                             ),
-                                            const SizedBox(
-                                              width: 10,
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                (myUpcomingBooking
-                                                        ?.shopAddress ??
-                                                    ''),
-                                                style: AppFonts.regular
-                                                    .copyWith(
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w500),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        Text(
-                                          '\$ ${myUpcomingBooking?.total ?? ''}',
-                                          style: AppFonts.yellowFont,
-                                        )
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            InkWell(
-                              onTap: () async {
-                                bookingId = myBookingResponse
-                                    ?.data?.upcoming?[index].id;
-                                debugPrint(
-                                    '>>>>>>>>>>>>>>${bookingId}<<<<<<<<<<<<<<');
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CompleteBookingDetail(
-                                        bookingId: bookingId),
+                                          )
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 5,
+                                      ),
+                                      Text(
+                                        '\$ ${myUpcomingBooking?.total ?? ''}',
+                                        style: AppFonts.yellowFont,
+                                      )
+                                    ],
                                   ),
-                                );
-                              },
-                              child: Align(
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          InkWell(
+                            onTap: () async {
+                              bookingId =
+                                  myBookingResponse?.data?.upcoming?[index].id;
+
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CompleteBookingDetail(
+                                      bookingId: bookingId),
+                                ),
+                              );
+                            },
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Container(
+                                height: 28,
                                 alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  height: 28,
-                                  alignment: Alignment.bottomCenter,
-                                  decoration: const BoxDecoration(
-                                    color: AppColor.yellow,
-                                    borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(10),
-                                      bottomRight: Radius.circular(10),
-                                    ),
+                                decoration: const BoxDecoration(
+                                  color: AppColor.yellow,
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
                                   ),
-                                  child: Text(
-                                    AppStrings.viewDetails,
-                                    style: AppFonts.blackFont.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColor.black1),
-                                  ),
+                                ),
+                                child: Text(
+                                  AppStrings.viewDetails,
+                                  style: AppFonts.blackFont.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColor.black1),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                    separatorBuilder: (BuildContext context, int index) =>
-                        const SizedBox(
-                      height: 10,
-                    ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  separatorBuilder: (BuildContext context, int index) =>
+                      const SizedBox(
+                    height: 10,
                   ),
                 ),
               ),
@@ -522,6 +514,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
   }
 
   MyBookingResponse? myBookingResponse;
+
   Future<void> myBookingApi(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -554,8 +547,14 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
     // Helper().showToast(jsonResponse['message']);
     if (jsonResponse['status'] == true) {
       myBookingResponse = MyBookingResponse.fromJson(jsonResponse);
-
       setState(() {});
+    }
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    if (mounted) {
+      super.setState(fn);
     }
   }
 }

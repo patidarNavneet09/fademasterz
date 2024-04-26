@@ -78,10 +78,10 @@ class BookingDetailData {
         bookingId: json["booking_id"],
         date: json["date"] == null ? null : DateTime.parse(json["date"]),
         startTime: json["start_time"],
-        specialistId: json["specialist_id"],
-        subTotal: json["sub_total"],
-        tax: json["tax"],
-        total: json["total"],
+        specialistId: json["specialist_id"].toString(),
+        subTotal: json["sub_total"].toString(),
+        tax: json["tax"].toString(),
+        total: json["total"].toString(),
         bookingStatus: json["booking_status"],
         serviceIds: json["service_ids"],
         shopImage: json["shop_image"],
@@ -135,7 +135,7 @@ class Service {
   factory Service.fromJson(Map<String, dynamic> json) => Service(
         id: json["id"],
         name: json["name"],
-        price: json["price"],
+        price: json["price"].toString(),
       );
 
   Map<String, dynamic> toJson() => {

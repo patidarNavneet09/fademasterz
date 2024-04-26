@@ -13,7 +13,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../ApiService/api_service.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/custom_app_bar.dart';
-import '../Utils/helper.dart';
 import '../Utils/utility.dart';
 
 class HelpScreen extends StatefulWidget {
@@ -144,10 +143,18 @@ class _HelpScreenState extends State<HelpScreen> {
                       const SizedBox(
                         width: 12,
                       ),
-                      Text(
-                        (helpCenterModal.data?.helpWebsite.toString() ?? ''),
-                        style: AppFonts.normalText.copyWith(
-                            fontWeight: FontWeight.w500, fontSize: 14),
+                      InkWell(
+                        onTap: () {
+                          launchUrlStart(
+                              url: helpCenterModal.data?.helpWebsite
+                                      .toString() ??
+                                  '');
+                        },
+                        child: Text(
+                          (helpCenterModal.data?.helpWebsite.toString() ?? ''),
+                          style: AppFonts.normalText.copyWith(
+                              fontWeight: FontWeight.w500, fontSize: 14),
+                        ),
                       )
                     ],
                   ),
@@ -257,13 +264,6 @@ class _HelpScreenState extends State<HelpScreen> {
     );
   }
 
-  final Uri _url = Uri.parse('https://flutter.dev');
-  Future<void> _launchUrl() async {
-    if (!await launchUrl(_url)) {
-      throw Exception('Could not launch $_url');
-    }
-  }
-
   Future<void> launchUrlStart({required String url}) async {
     debugPrint('>>>>>>>>>>>>>>${url}<<<<<<<<<<<<<<');
     if (!await launchUrl(Uri.parse(url))) {
@@ -296,21 +296,13 @@ class _HelpScreenState extends State<HelpScreen> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
     if (jsonResponse['status'] == true) {
       helpCenterModal = HelpCenterModal.fromJson(jsonResponse);
 
-      Helper().showToast(
-        jsonResponse['message'],
-      );
-
       setState(() {});
-      if (context.mounted) {
-      } else {
-        Helper().showToast(
-          jsonResponse['message'],
-        );
-      }
     }
   }
 
@@ -341,17 +333,15 @@ class _HelpScreenState extends State<HelpScreen> {
     if (jsonResponse['status'] == true) {
       socialLinkModal = SocialLinkModal.fromJson(jsonResponse);
 
-      Helper().showToast(
-        jsonResponse['message'],
-      );
+      // Helper().showToast(
+      //   jsonResponse['message'],
+      // );
 
       setState(() {});
-      if (context.mounted) {
-      } else {
-        Helper().showToast(
-          jsonResponse['message'],
-        );
-      }
+
+      // Helper().showToast(
+      //   jsonResponse['message'],
+      // );
     }
   }
 }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:flutter_svg/svg.dart';
 
-import '../Booking/upcoming_booking_details.dart';
+import '../Booking/cancelled_booking_details.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_fonts.dart';
 import '../Utils/app_string.dart';
@@ -250,7 +250,7 @@ class PaymentDirectionState extends State<PaymentDirection> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const UpComingBookingDetail(),
+                                  const CancelledBookingDetail(),
                             ),
                           );
                         },

@@ -120,7 +120,7 @@ class Service {
   factory Service.fromJson(Map<String, dynamic> json) => Service(
         id: json["id"],
         name: json["name"],
-        price: json["price"],
+        price: json["price"].toString(),
       );
 
   Map<String, dynamic> toJson() => {

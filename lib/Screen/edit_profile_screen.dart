@@ -254,8 +254,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       floatingActionButton: MyAppButton(
         title: AppStrings.update,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        onPress: () {
+        onPress: () async {
           userUpdateProfile(context);
+          // var connectivityResult = await (Connectivity().checkConnectivity());
+          // // setState(() {
+          // //   _connectionStatus = connectivityResult
+          // // });
+          // if (connectivityResult == ConnectivityResult.wifi) {
+          //   if (context.mounted) {
+          //     userUpdateProfile(context);
+          //   }
+          // } else if (connectivityResult == ConnectivityResult.mobile) {
+          //   if (context.mounted) {
+          //     userUpdateProfile(context);
+          //   }
+          // } else {
+          //   if (context.mounted) {
+          //     Utility.showNoNetworkDialog(
+          //       context,
+          //     );
+          //   }
+          // }
         },
       ),
     );
@@ -361,6 +380,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
 
     if (jsonResponse['status'] == true) {
       profileModal = ProfileModal.fromJson(jsonResponse);
@@ -372,17 +394,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       sharedPreferences.setString('image', profileModal.data?.image ?? '');
       sharedPreferences.setString('name', profileModal.data?.name ?? '');
 
-      Helper().showToast(
-        jsonResponse['message'],
-      );
-
       setState(() {});
-      if (context.mounted) {
-      } else {
-        Helper().showToast(
-          jsonResponse['message'],
-        );
-      }
     }
   }
 }

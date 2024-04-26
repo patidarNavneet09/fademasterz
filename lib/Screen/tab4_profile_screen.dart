@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
+import '../Booking/cancelled_booking_screen.dart';
 import '../Utils/app_fonts.dart';
 import '../Utils/helper.dart';
 import '../Utils/utility.dart';
@@ -208,6 +209,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+                      builder: (context) => const CancelledBookingScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        5,
+                      ),
+                      color: AppColor.black),
+                  child: Row(
+                    children: [
+                      SvgPicture.asset(
+                        AppIcon.cancelledIcon,
+                        //   color: AppColor.white,
+                        height: 20,
+                        width: 20,
+                      ),
+                      const SizedBox(
+                        width: 13,
+                      ),
+                      Expanded(
+                        child: Text(AppStrings.cancelledBookings,
+                            style: AppFonts.appText.copyWith(fontSize: 14)),
+                      ),
+                      SvgPicture.asset(
+                        AppIcon.forwardIcon,
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              InkWell(
+                onTap: () async {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
                       builder: (context) => const PrivacyPolicyScreen(),
                     ),
                   );
@@ -378,7 +423,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Expanded(
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        userLogout(context);
+                                        userLogoutApi(context);
                                       },
                                       style: ElevatedButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
@@ -389,7 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ),
                                           ),
                                           backgroundColor: AppColor.yellow),
-                                      child: Text(AppStrings.yes,
+                                      child: const Text(AppStrings.yes,
                                           style: AppFonts.blackFont),
                                     ),
                                   ),
@@ -654,7 +699,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> userLogout(BuildContext context) async {
+  Future<void> userLogoutApi(BuildContext context) async {
     final SharedPreferences sharedPreferences =
         await SharedPreferences.getInstance();
     if (context.mounted) {

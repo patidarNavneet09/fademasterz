@@ -10,6 +10,8 @@ class AppAssets {
 class AppIcon {
   static const String phoneIcon = 'assets/icon/phoneIcon.svg';
   static const String homeIcon1 = 'assets/icon/homeIcon1.svg';
+  static const String cancelledIcon = 'assets/icon/cancelledIcon.svg';
+  static const String cancelledIcon1 = 'assets/icon/cancelledIcon1.svg';
   static const String bookingIcon1 = 'assets/icon/bookingIcon1.svg';
   static const String chatIcon1 = 'assets/icon/chatIcon1.svg';
   static const String profileIcon1 = 'assets/icon/profileIcon1.svg';

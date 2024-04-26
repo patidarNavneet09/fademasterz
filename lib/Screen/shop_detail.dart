@@ -21,7 +21,6 @@ import '../ApiService/api_service.dart';
 import '../Utils/app_fonts.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
-import '../Utils/helper.dart';
 import '../Utils/utility.dart';
 import 'gallery_screen.dart';
 
@@ -36,6 +35,11 @@ class _ShopDetailState extends State<ShopDetail> {
   int selectIndex = 0;
   int selectIndex1 = 0;
   bool isListVisible = false;
+  bool isDataLoad = false;
+  void setLoader(bool value) {
+    isDataLoad = value;
+    setState(() {});
+  }
 
   List<Widget> categories = [];
 
@@ -306,7 +310,7 @@ class _ShopDetailState extends State<ShopDetail> {
                           )
                         ],
                       ),
-                    Divider(
+                    const Divider(
                       color: AppColor.dividerColor,
                       height: 25,
                     ),
@@ -363,7 +367,6 @@ class _ShopDetailState extends State<ShopDetail> {
       ],
     );
 
-    setState(() {});
     super.initState();
   }
 
@@ -411,13 +414,15 @@ class _ShopDetailState extends State<ShopDetail> {
           Expanded(
             child: SingleChildScrollView(
               child: Visibility(
-                visible: (shopDetailModal.data?.address?.isNotEmpty ?? false),
-                replacement: const Center(
-                  child: Text(
-                    'No Data Found',
+                visible: (shopDetailModal.data?.name?.isNotEmpty ?? false),
+                replacement: Center(
+                    child: Visibility(
+                  visible: !isDataLoad,
+                  child: const Text(
+                    'No Data Load',
                     style: AppFonts.normalText,
                   ),
-                ),
+                )),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -738,6 +743,8 @@ class _ShopDetailState extends State<ShopDetail> {
     DateTime openDateTime = DateFormat.Hm().parse(openTime);
 
     DateTime closeDateTime = DateFormat.Hm().parse(closeTime);
+    // debugPrint('>>>>>>>>>>>>>>${openDateTime}<<<<<<<<<<<<<<');
+    // debugPrint('>>>>>>>>>>>>>>${closeDateTime}<<<<<<<<<<<<<<');
     DateTime currentTime = DateTime(openDateTime.year, openDateTime.month,
         openDateTime.day, ct.hour, ct.minute, ct.second);
 
@@ -759,48 +766,44 @@ class _ShopDetailState extends State<ShopDetail> {
   String? closeTime;
   ShopDetailModal shopDetailModal = ShopDetailModal();
   Future<void> shopDetail(BuildContext context) async {
+    setLoader(true);
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    try {
-      if (context.mounted) {
-        Utility.progressLoadingDialog(context, true);
-      }
-      var request = {};
 
-      request["shop_id"] = sharedPreferences.getInt('shop_id');
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    var request = {};
 
-      var response = await http.post(
-          Uri.parse(
-            ApiService.shopDetail,
-          ),
-          body: jsonEncode(request),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization':
-                'Bearer ${sharedPreferences.getString("access_Token")}'
-          });
+    request["shop_id"] = sharedPreferences.getInt('shop_id');
 
-      if (context.mounted) {
-        Utility.progressLoadingDialog(context, false);
-      }
+    var response = await http.post(
+        Uri.parse(
+          ApiService.shopDetail,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
 
-      Map<String, dynamic> jsonResponse = jsonDecode(
-        response.body,
-      );
-      // Helper().showToast(
-      //   jsonResponse['message'],
-      // );
-      if (jsonResponse['status'] == true) {
-        shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
-        openTime = shopDetailModal.data?.shopStartTime;
-        closeTime = shopDetailModal.data?.shopEndTime;
-        _updateShopStatus(openTime!, closeTime!);
-        setState(() {});
-      }
-    } catch (e) {
-      Helper().showToast(
-        e.toString(),
-      );
+    setLoader(false);
+    if (context.mounted) {
+      Utility.progressLoadingDialog(context, false);
+    }
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
+    if (jsonResponse['status'] == true) {
+      shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
+      openTime = shopDetailModal.data?.shopStartTime;
+      closeTime = shopDetailModal.data?.shopEndTime;
+      _updateShopStatus(openTime!, closeTime!);
+      setState(() {});
     }
   }
 }

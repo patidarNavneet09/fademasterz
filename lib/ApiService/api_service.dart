@@ -1,6 +1,9 @@
 class ApiService {
-  static const String baseUrl = "https://work.mobidudes.in/KK/fademasterz/api/";
-  static const String imageUrl = "https://work.mobidudes.in/KK/fademasterz/";
+//  static const String baseUrl = "https://work.mobidudes.in/KK/fademasterz/api/";
+  static const String baseUrl =
+      "https://fademasters.yourwebsitebysml.co.uk/api/";
+  //static const String imageUrl = "https://work.mobidudes.in/KK/fademasterz/";
+  static const String imageUrl = "https://fademasters.yourwebsitebysml.co.uk/";
 
   static const String enterNumber = '${baseUrl}enter-number';
   static const String verifyOtp = '${baseUrl}verify-otp';
@@ -25,4 +28,5 @@ class ApiService {
   static const String bookingDetail = '${baseUrl}booking-detail';
   static const String rateNow = '${baseUrl}rate-now';
   static const String cancelBooking = '${baseUrl}cancel-booking';
+  static const String cancelBookingList = '${baseUrl}cancel-booking-list';
 }

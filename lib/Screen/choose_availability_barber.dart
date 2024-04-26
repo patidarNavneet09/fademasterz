@@ -122,6 +122,16 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
     super.initState();
   }
 
+  Future<bool> willPopScop() async {
+    Navigator.of(context).pop();
+    // Navigator.push(
+    //     context,
+    //     MaterialPageRoute(
+    //       builder: (context) => const SelectYourServices(),
+    //    ));
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,7 +149,8 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
             //     color: Theme.of(context).appBarTheme.foregroundColor,
           ),
           onPressed: () {
-            Navigator.of(context).pop();
+            willPopScop();
+
             // onCallback();
             setState(() {});
           },
@@ -571,19 +582,6 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
               Helper().showToast('No Available Specialist');
             }
 
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) => BookingSummaryScreen(
-            //         // time: time,
-            //         // date: date,
-            //         // // image: image,
-            //         // price: widget.price,
-            //         // text: text,
-            //         // specialistId: specialistId,
-            //         ),
-            //   ),
-            // );
             // noteCn.clear();
           },
           style: ElevatedButton.styleFrom(

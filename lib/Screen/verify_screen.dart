@@ -57,9 +57,9 @@ class _VerifyScreenState extends State<VerifyScreen> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-    Helper().showToast(
-      jsonResponse['message'],
-    );
+    // Helper().showToast(
+    //   jsonResponse['message'],
+    // );
 
     if (jsonResponse['status']) {
       mobileStarttimer();
@@ -241,7 +241,9 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    resendOtp(context);
+                    if (mobileOtpSecondsRemaining == 0) {
+                      resendOtp(context);
+                    }
                   },
                   child: Text(
                     AppStrings.resend,
@@ -264,9 +266,29 @@ class _VerifyScreenState extends State<VerifyScreen> {
       floatingActionButton: MyAppButton(
         title: AppStrings.verify,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        onPress: () {
+        onPress: () async {
           if (isValidate()) {
             verifyOtp(context);
+            // final connectivityResult =
+            //     await (Connectivity().checkConnectivity());
+            // // setState(() {
+            // //   _connectionStatus = connectivityResult
+            // // });
+            // if (connectivityResult == ConnectivityResult.wifi) {
+            //   if (context.mounted) {
+            //     verifyOtp(context);
+            //   }
+            // } else if (connectivityResult == ConnectivityResult.mobile) {
+            //   if (context.mounted) {
+            //     verifyOtp(context);
+            //   }
+            // } else {
+            //   if (context.mounted) {
+            //     Utility.showNoNetworkDialog(
+            //       context,
+            //     );
+            //   }
+            // }
           }
         },
       ),
@@ -316,20 +338,16 @@ class _VerifyScreenState extends State<VerifyScreen> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-
+    Helper().showToast(
+      jsonResponse['message'],
+    );
     if (jsonResponse['status'] == true) {
-      //sharedPreferences.setBool("profileSetUp", true);
       verifyOtpModal = VerifyOtpModal.fromJson(jsonResponse);
 
       sharedPreferences.setString(
           "access_Token", verifyOtpModal.data!.userDetail!.token.toString());
 
-      Helper().showToast(
-        jsonResponse['message'],
-      );
       if (context.mounted) {
-        debugPrint(
-            '>>>>>>>>>>>>>>${verifyOtpModal.data?.userDetail?.name}<<<<<<<<<<<<<<');
         if (verifyOtpModal.data?.isSetup == 'yes') {
           // sharedPreferences.setBool("profileSetUp", true);
           Navigator.push(
@@ -349,10 +367,6 @@ class _VerifyScreenState extends State<VerifyScreen> {
           );
         }
       }
-    } else {
-      Helper().showToast(
-        jsonResponse['message'],
-      );
     }
   }
 }

@@ -95,27 +95,27 @@ class _EnterYourNoState extends State<EnterYourNo> {
         onPress: () async {
           if (isValidate()) {
             enterNumberApi(context);
-            //     final connectivityResult =
-            //         await (Connectivity().checkConnectivity());
-            //     setState(() {
-            //       _connectionStatus = connectivityResult;
-            //     });
-            //     if (_connectionStatus == ConnectivityResult.wifi) {
-            //       if (context.mounted) {
-            //         enterNumberApi(context);
-            //       }
-            //     } else if (_connectionStatus == ConnectivityResult.mobile) {
-            //       if (context.mounted) {
-            //         enterNumberApi(context);
-            //       }
-            //     } else {
-            //       if (context.mounted) {
-            //         Utility.showNoNetworkDialog(
-            //           context,
-            //         );
-            //       }
-            //     }
+
+            // final connectivityResult =
+            //     await (Connectivity().checkConnectivity());
+            // // setState(() {
+            // //   _connectionStatus = connectivityResult
+            // // });
+            // if (connectivityResult == ConnectivityResult.wifi) {
+            //   if (context.mounted) {
             //     enterNumberApi(context);
+            //   }
+            // } else if (connectivityResult == ConnectivityResult.mobile) {
+            //   if (context.mounted) {
+            //     enterNumberApi(context);
+            //   }
+            // } else {
+            //   if (context.mounted) {
+            //     Utility.showNoNetworkDialog(
+            //       context,
+            //     );
+            //   }
+            // }
           }
         },
       ),

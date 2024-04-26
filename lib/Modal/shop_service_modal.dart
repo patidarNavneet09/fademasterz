@@ -78,7 +78,7 @@ class Service {
         id: json["id"],
         name: json["name"],
         duration: json["duration"],
-        price: json["price"],
+        price: json["price"].toString(),
         selected: json["selected"],
       );
 
