@@ -71,7 +71,7 @@ class AppStrings {
   static const String inbox = 'Inbox';
   static const String selectService = 'Select Your Services';
   static const String haircut = 'Haircut';
-  static const String Continue = 'Continue';
+  static const String continueString = 'Continue';
   static const String availabilityBarber = 'Choose Availability/Barber';
   static const String chooseYourSpecialists = 'Choose Your Specialists';
   static const String availableTime = 'Available Time';
@@ -88,7 +88,8 @@ class AppStrings {
   static const String bookingDate = 'Booking Date';
   static const String bookingTime = 'Booking Time';
   static const String specialist = 'Specialist';
-
+  static const String conformCancel =
+      'Are you sure you want to cancel your barber/salon booking?';
   static String nails = 'Nails';
   static String hairWash = 'Hair Wash';
   static String subTotal = 'Sub Total';

@@ -72,7 +72,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                               SvgPicture.asset(
                                 AppIcon.ratingIcon,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 6,
                               ),
                               Text(

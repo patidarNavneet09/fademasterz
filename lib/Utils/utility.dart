@@ -45,4 +45,28 @@ class Utility {
       },
     );
   }
+
+  static showNoGetNetworkDialog(BuildContext context) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return WillPopScope(
+            onWillPop: () async => false,
+            child: AlertDialog(
+              title: const Text('No Network Connection'),
+              content: const Text(
+                  'Please check your internet and Wi-Fi connection.'),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ));
+      },
+    );
+  }
 }

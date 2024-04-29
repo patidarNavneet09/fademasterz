@@ -635,6 +635,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                     TextButton(
                         onPressed: () {
                           showModalBottomSheet(
+                            isDismissible: false,
                             backgroundColor: Colors.transparent,
                             context: context,
                             builder: (ctx) {
@@ -684,7 +685,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                                             horizontal: 35),
                                         child: Text(
                                           textAlign: TextAlign.center,
-                                          'Are you sure you want to cancel your barber/salon booking?',
+                                          AppStrings.conformCancel,
                                           style: AppFonts.normalText
                                               .copyWith(fontSize: 14),
                                         ),
@@ -876,6 +877,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
   Future showBottomSheet() async {
     return await showModalBottomSheet(
       backgroundColor: Colors.transparent,
+      isDismissible: false,
       context: context,
       builder: (context) {
         return Container(

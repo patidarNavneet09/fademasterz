@@ -20,7 +20,6 @@ class SpecialistScreen extends StatefulWidget {
 }
 
 class _SpecialistScreenState extends State<SpecialistScreen> {
-  ShopDetailModal shopDetailModal = ShopDetailModal();
   @override
   Widget build(BuildContext context) {
     return Scaffold(

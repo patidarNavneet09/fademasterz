@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/app_string.dart';
@@ -154,12 +156,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: _imageFile == null
                           ? Visibility(
                               visible: (image?.isNotEmpty ?? false),
-                              child: Image.network(
-                                ApiService.imageUrl + (image ?? ''),
+                              child: CachedNetworkImage(
+                                imageUrl: ApiService.imageUrl + (image ?? ''),
                                 height: 103,
                                 width: 103,
                                 fit: BoxFit.fill,
+                                progressIndicatorBuilder:
+                                    (context, url, downloadProgress) =>
+                                        CircularProgressIndicator(
+                                            value: downloadProgress.progress),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.error),
                               ),
+
+                              // Image.network(
+                              //   ApiService.imageUrl + (image ?? ''),
+                              //   height: 103,
+                              //   width: 103,
+                              //   fit: BoxFit.fill,
+                              // ),
                             )
                           : Image.file(
                               _imageFile ?? File('path'),
@@ -255,26 +270,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: AppStrings.update,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () async {
-          userUpdateProfile(context);
-          // var connectivityResult = await (Connectivity().checkConnectivity());
-          // // setState(() {
-          // //   _connectionStatus = connectivityResult
-          // // });
-          // if (connectivityResult == ConnectivityResult.wifi) {
-          //   if (context.mounted) {
-          //     userUpdateProfile(context);
-          //   }
-          // } else if (connectivityResult == ConnectivityResult.mobile) {
-          //   if (context.mounted) {
-          //     userUpdateProfile(context);
-          //   }
-          // } else {
-          //   if (context.mounted) {
-          //     Utility.showNoNetworkDialog(
-          //       context,
-          //     );
-          //   }
-          // }
+          final List<ConnectivityResult> connectivityResult =
+              await (Connectivity().checkConnectivity());
+
+          if (connectivityResult.contains(ConnectivityResult.mobile)) {
+            userUpdateProfile(context);
+          } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+            userUpdateProfile(context);
+          } else {
+            Utility.showNoNetworkDialog(context);
+          }
         },
       ),
     );
@@ -288,7 +293,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return false;
   }
 
-  ProfileUserData profileUserData = ProfileUserData();
+  ProfileUserData? profileUserData;
   Future<void> userUpdateProfile(BuildContext context) async {
     FocusManager.instance.primaryFocus?.unfocus();
     final SharedPreferences sharedPreferences =
@@ -352,7 +357,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  ProfileModal profileModal = ProfileModal();
+  ProfileModal? profileModal;
   Future<void> profileDetail(BuildContext context) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
 
@@ -387,12 +392,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (jsonResponse['status'] == true) {
       profileModal = ProfileModal.fromJson(jsonResponse);
 
-      image = profileModal.data?.image;
-      emailCn.text = (profileModal.data?.email ?? '');
-      nameCn.text = (profileModal.data?.name ?? '');
-      phoneCn.text = (profileModal.data?.phone ?? '');
-      sharedPreferences.setString('image', profileModal.data?.image ?? '');
-      sharedPreferences.setString('name', profileModal.data?.name ?? '');
+      image = profileModal?.data?.image;
+      emailCn.text = (profileModal?.data?.email ?? '');
+      nameCn.text = (profileModal?.data?.name ?? '');
+      phoneCn.text = (profileModal?.data?.phone ?? '');
+      sharedPreferences.setString('image', profileModal?.data?.image ?? '');
+      sharedPreferences.setString('name', profileModal?.data?.name ?? '');
 
       setState(() {});
     }

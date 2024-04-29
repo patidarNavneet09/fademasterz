@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fademasterz/Modal/home_page_modal.dart';
 import 'package:fademasterz/Screen/notification_screen.dart';
 import 'package:fademasterz/Screen/shop_detail.dart';
@@ -17,7 +19,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../ApiService/api_service.dart';
 import '../Utils/bottam_sheet.dart';
 import '../Utils/custom_app_button.dart';
-import '../Utils/helper.dart';
 import '../Utils/utility.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -37,11 +38,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showDialog(BuildContext context) async {
-    var permisssion = await Geolocator.checkPermission();
-    if (permisssion == LocationPermission.always ||
-        permisssion == LocationPermission.whileInUse) {
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
       homeDetail(context: context);
-      return;
+
+      // return;
     } else {
       await showDialog(
         barrierDismissible: false,
@@ -128,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       );
       homeDetail(context: context);
-      return;
     }
   }
 
@@ -183,7 +184,37 @@ class _HomeScreenState extends State<HomeScreen> {
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       await _showDialog(context);
     });
+    // final listener =
+    //     InternetConnection().onStatusChange.listen((InternetStatus status) {
+    //   switch (status) {
+    //     case InternetStatus.connected:
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'Data connection is available.'}<<<<<<<<<<<<<<');
+    //       // The internet is now connected
+    //       break;
+    //     case InternetStatus.disconnected:
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'You are disconnected from the internet.'}<<<<<<<<<<<<<<');
+    //       // The internet is now disconnected
+    //       break;
+    //   }
+    // });
 
+    // var listener = InternetConnectionChecker().onStatusChange.listen((status) {
+    //   switch (status) {
+    //     case InternetConnectionStatus.connected:
+    //       // homeDetail(context: context);
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'Data connection is available.'}<<<<<<<<<<<<<<');
+    //
+    //       break;
+    //     case InternetConnectionStatus.disconnected:
+    //       Utility.showNoGetNetworkDialog(context);
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'You are disconnected from the internet.'}<<<<<<<<<<<<<<');
+    //       break;
+    //   }
+    // });
     super.initState();
   }
 
@@ -208,13 +239,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       visible:
                           (homePageModal.data?.userDetail?.image?.isNotEmpty ??
                               false),
-                      child: Image.network(
-                        ApiService.imageUrl +
+                      child: CachedNetworkImage(
+                        imageUrl: ApiService.imageUrl +
                             (homePageModal.data?.userDetail?.image ?? ''),
                         height: 36,
                         width: 36,
                         fit: BoxFit.cover,
+                        placeholder: (
+                          context,
+                          url,
+                        ) =>
+                            const CircularProgressIndicator(
+                          color: AppColor.yellow,
+                        ),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.error),
                       ),
+
+                      // Image.network(
+                      //   ApiService.imageUrl +
+                      //       (homePageModal.data?.userDetail?.image ?? ''),
+                      //   height: 36,
+                      //   width: 36,
+                      //   fit: BoxFit.cover,
+                      // ),
                     ),
                   ),
                   const SizedBox(
@@ -334,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 15,
               ),
               Text(
-                '${(searchCn.text.trim().isNotEmpty ?? false) ? (searchHomePageModal?.data?.totalShops ?? '') : (homePageModal.data?.totalShops ?? '')} Shops available',
+                '${(searchCn.text.trim().isNotEmpty) ? (searchHomePageModal?.data?.totalShops ?? '') : (homePageModal.data?.totalShops ?? '')} Shops available',
                 style: AppFonts.text.copyWith(
                   fontSize: 16,
                   color: AppColor.yellow,
@@ -400,10 +448,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   child: Visibility(
                                     visible: (item?.image?.isNotEmpty ?? false),
-                                    child: Image.network(
-                                      ApiService.imageUrl + (item?.image ?? ''),
+                                    child: CachedNetworkImage(
+                                      imageUrl: ApiService.imageUrl +
+                                          (item?.image ?? ''),
                                       fit: BoxFit.fill,
+                                      placeholder: (
+                                        context,
+                                        url,
+                                      ) =>
+                                          const CircularProgressIndicator(
+                                        color: AppColor.yellow,
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          const Icon(Icons.error),
                                     ),
+
+                                    // Image.network(
+                                    //   ApiService.imageUrl + (item?.image ?? ''),
+                                    //   fit: BoxFit.fill,
+                                    // ),
                                   ),
                                 ),
                                 const SizedBox(
@@ -676,66 +739,72 @@ class _HomeScreenState extends State<HomeScreen> {
     required BuildContext context,
     String? searchValue,
   }) async {
-    try {
+    // try {
+    if (searchValue?.isEmpty ?? true) {
+      Utility.progressLoadingDialog(context, true);
+    }
+    setLoader(true);
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    if (latitude == null || longitude == null) {
+      await getLetLongPosition();
+    }
+
+    var request = {};
+    request["latitude"] = latitude.toString();
+    request['longitude'] = longitude.toString();
+    request["search"] = searchValue ?? '';
+
+    var response = await http.post(
+        Uri.parse(
+          ApiService.home,
+        ),
+        body: jsonEncode(request),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer ${sharedPreferences.getString("access_Token")}'
+        });
+
+    if (context.mounted) {
       if (searchValue?.isEmpty ?? true) {
-        Utility.progressLoadingDialog(context, true);
+        Utility.progressLoadingDialog(context, false);
       }
-      setLoader(true);
-      SharedPreferences sharedPreferences =
-          await SharedPreferences.getInstance();
+    }
+    setLoader(false);
 
-      if (latitude == null || longitude == null) {
-        await getLetLongPosition();
-      }
+    Map<String, dynamic> jsonResponse = jsonDecode(
+      response.body,
+    );
 
-      var request = {};
-      request["latitude"] = latitude.toString();
-      request['longitude'] = longitude.toString();
-      request["search"] = searchValue ?? '';
+    sharedPreferences.setBool("profileSetUp", true);
+    if (jsonResponse['status'] == true) {
+      if (searchValue?.isNotEmpty ?? false) {
+        searchHomePageModal = HomePageModal.fromJson(jsonResponse);
+        setState(() {});
+      } else {
+        homePageModal = HomePageModal.fromJson(jsonResponse);
 
-      var response = await http.post(
-          Uri.parse(
-            ApiService.home,
-          ),
-          body: jsonEncode(request),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization':
-                'Bearer ${sharedPreferences.getString("access_Token")}'
-          });
-
-      if (context.mounted) {
-        if (searchValue?.isEmpty ?? true) {
-          Utility.progressLoadingDialog(context, false);
-        }
-      }
-      setLoader(false);
-
-      Map<String, dynamic> jsonResponse = jsonDecode(
-        response.body,
-      );
-
-      sharedPreferences.setBool("profileSetUp", true);
-      if (jsonResponse['status']) {
-        if (searchValue?.isNotEmpty ?? false) {
-          searchHomePageModal = HomePageModal.fromJson(jsonResponse);
-          setState(() {});
-        } else {
-          homePageModal = HomePageModal.fromJson(jsonResponse);
-          setState(() {});
-        }
-
-        sharedPreferences.setString(
-            'image', homePageModal.data?.userDetail?.image ?? '');
-        sharedPreferences.setString(
-            'name', homePageModal.data?.userDetail?.name ?? '');
-
-        sharedPreferences.setBool("profileSetUp", true);
         setState(() {});
       }
-    } catch (e) {
-      Helper().showToast(e.toString());
+
+      sharedPreferences.setString(
+          'image', homePageModal.data?.userDetail?.image ?? '');
+      sharedPreferences.setString(
+          'name', homePageModal.data?.userDetail?.name ?? '');
+
+      sharedPreferences.setBool("profileSetUp", true);
+      setState(() {});
     }
+    // }
+    // catch (e) {
+    //   Helper().showToast(e.toString());
+    // }
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
   }
 }

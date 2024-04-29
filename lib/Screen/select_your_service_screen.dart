@@ -238,7 +238,7 @@ class _SelectYourServicesState extends State<SelectYourServices> {
               ),
               const Spacer(),
               const Text(
-                AppStrings.Continue,
+                AppStrings.continueString,
                 style: AppFonts.blackFont,
               ),
               const SizedBox(

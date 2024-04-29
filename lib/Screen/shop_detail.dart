@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fademasterz/Modal/shop_detail_modal.dart';
 import 'package:fademasterz/Screen/reviewes_screen.dart';
 import 'package:fademasterz/Screen/select_your_service_screen.dart';
@@ -205,20 +206,26 @@ class _ShopDetailState extends State<ShopDetail> {
                       child: GestureDetector(
                         onTap: () {
                           showDialog(
+                            barrierDismissible: false,
                             context: context,
                             builder: (context) {
                               return Dialog(
                                 backgroundColor: Colors.transparent,
                                 child: Stack(children: [
-                                  Image.network(
-                                    ApiService.imageUrl +
-                                        (gallery?.image ?? ''),
-                                    //     images[index],
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width,
+                                    height: 200,
+                                    child: Image.network(
+                                      ApiService.imageUrl +
+                                          (gallery?.image ?? ''),
+                                      //     images[index],
 
-                                    fit: BoxFit.fill,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                   Positioned(
                                     right: 0,
+                                    top: 0,
                                     child: SizedBox(
                                       height: 21,
                                       width: 21,
@@ -236,13 +243,26 @@ class _ShopDetailState extends State<ShopDetail> {
                             },
                           );
                         },
-                        child: Image.network(
-                          ApiService.imageUrl + (gallery?.image ?? ''),
-                          //     images[index],
+                        child: CachedNetworkImage(
+                          imageUrl:
+                              ApiService.imageUrl + (gallery?.image ?? ''),
                           width: 103,
                           height: 88,
                           fit: BoxFit.fill,
+                          progressIndicatorBuilder:
+                              (context, url, downloadProgress) =>
+                                  CircularProgressIndicator(
+                                      value: downloadProgress.progress),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
                         ),
+                        // Image.network(
+                        //   ApiService.imageUrl + (gallery?.image ?? ''),
+                        //   //     images[index],
+                        //   width: 103,
+                        //   height: 88,
+                        //   fit: BoxFit.fill,
+                        // ),
                       ),
                     );
                   },
@@ -322,8 +342,8 @@ class _ShopDetailState extends State<ShopDetail> {
                         ),
                         const Spacer(),
                         Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 15, vertical: 5),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
@@ -335,7 +355,7 @@ class _ShopDetailState extends State<ShopDetail> {
                               SvgPicture.asset(
                                 AppIcon.ratingIcon,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 6,
                               ),
                               Text(
@@ -355,8 +375,8 @@ class _ShopDetailState extends State<ShopDetail> {
                       DateFormat('dd-MMM-yyyy').format(
                         DateTime.parse(review?.createdAt.toString() ?? ''),
                       ),
-                      style: AppFonts.normalText
-                          .copyWith(fontSize: 13, color: Color(0xff989898)),
+                      style: AppFonts.normalText.copyWith(
+                          fontSize: 13, color: const Color(0xff989898)),
                     ),
                   ],
                 );
@@ -366,7 +386,21 @@ class _ShopDetailState extends State<ShopDetail> {
         ),
       ],
     );
-
+    // final listener =
+    //     InternetConnection().onStatusChange.listen((InternetStatus status) {
+    //   switch (status) {
+    //     case InternetStatus.connected:
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'Data connection is available.'}<<<<<<<<<<<<<<');
+    //       // The internet is now connected
+    //       break;
+    //     case InternetStatus.disconnected:
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'You are disconnected from the internet.'}<<<<<<<<<<<<<<');
+    //       // The internet is now disconnected
+    //       break;
+    //   }
+    // });
     super.initState();
   }
 
@@ -630,13 +664,27 @@ class _ShopDetailState extends State<ShopDetail> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(35),
-                                    child: Image.network(
-                                      ApiService.imageUrl +
+                                    child: CachedNetworkImage(
+                                      imageUrl: ApiService.imageUrl +
                                           (specialist?.image ?? ''),
                                       height: 60,
                                       width: 60,
                                       fit: BoxFit.fill,
+                                      progressIndicatorBuilder: (context, url,
+                                              downloadProgress) =>
+                                          CircularProgressIndicator(
+                                              value: downloadProgress.progress),
+                                      errorWidget: (context, url, error) =>
+                                          const Icon(Icons.error),
                                     ),
+
+                                    //   Image.network(
+                                    //     ApiService.imageUrl +
+                                    //         (specialist?.image ?? ''),
+                                    //     height: 60,
+                                    //     width: 60,
+                                    //     fit: BoxFit.fill,
+                                    //   ),
                                   ),
                                   Text(
                                     (specialist?.name ?? ''),

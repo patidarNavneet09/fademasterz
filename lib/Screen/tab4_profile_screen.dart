@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fademasterz/Modal/profile_modal.dart';
 import 'package:fademasterz/Screen/edit_profile_screen.dart';
 import 'package:fademasterz/Screen/help_screen.dart';
@@ -81,31 +83,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   children: [
                     ClipRRect(
-                        borderRadius: BorderRadius.circular(70),
-                        child: Visibility(
-                          visible: (image?.isNotEmpty ?? false),
-                          child: Image.network(
-                            ApiService.imageUrl + (image ?? ''),
-                            height: 72,
-                            width: 72,
-                            fit: BoxFit.fill,
-                          ),
-                        )
+                      borderRadius: BorderRadius.circular(70),
+                      child: Visibility(
+                        visible: (image?.isNotEmpty ?? false),
 
-                        // _imageFile == null
-                        //     ? Image.asset(
-                        //         AppAssets.dummyImage,
-                        //         height: 72,
-                        //         width: 72,
-                        //         fit: BoxFit.fill,
-                        //       )
-                        //     : Image.file(
-                        //         _imageFile ?? File('path'),
-                        //         height: 72,
-                        //         width: 72,
-                        //         fit: BoxFit.fill,
-                        //       ),
+                        child: CachedNetworkImage(
+                          imageUrl: ApiService.imageUrl + (image ?? ''),
+                          height: 72,
+                          width: 72,
+                          fit: BoxFit.fill,
+                          progressIndicatorBuilder:
+                              (context, url, downloadProgress) =>
+                                  CircularProgressIndicator(
+                                      value: downloadProgress.progress),
+                          errorWidget: (context, url, error) =>
+                              Icon(Icons.error),
                         ),
+                        // child: Image.network(
+                        //   ApiService.imageUrl + (image ?? ''),
+                        //   height: 72,
+                        //   width: 72,
+                        //   fit: BoxFit.fill,
+                      ),
+                    ),
+
+                    // _imageFile == null
+                    //     ? Image.asset(
+                    //         AppAssets.dummyImage,
+                    //         height: 72,
+                    //         width: 72,
+                    //         fit: BoxFit.fill,
+                    //       )
+                    //     : Image.file(
+                    //         _imageFile ?? File('path'),
+                    //         height: 72,
+                    //         width: 72,
+                    //         fit: BoxFit.fill,
+                    //       ),
+                    //  ),
                     const SizedBox(
                       height: 4,
                     ),
@@ -422,8 +437,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () {
-                                        userLogoutApi(context);
+                                      onPressed: () async {
+                                        final List<ConnectivityResult>
+                                            connectivityResult =
+                                            await (Connectivity()
+                                                .checkConnectivity());
+
+                                        if (connectivityResult.contains(
+                                            ConnectivityResult.mobile)) {
+                                          userLogoutApi(context);
+                                        } else if (connectivityResult.contains(
+                                            ConnectivityResult.wifi)) {
+                                          userLogoutApi(context);
+                                        } else {
+                                          Utility.showNoNetworkDialog(context);
+                                        }
                                       },
                                       style: ElevatedButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
@@ -580,7 +608,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  EnterYourNo(),
+                                                  const EnterYourNo(),
                                             ),
                                             (route) => false);
                                       },
@@ -593,7 +621,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ),
                                           ),
                                           backgroundColor: AppColor.yellow),
-                                      child: Text(AppStrings.yes,
+                                      child: const Text(AppStrings.yes,
                                           style: AppFonts.blackFont),
                                     ),
                                   ),
@@ -605,29 +633,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       onPressed: () async {
                                         Navigator.of(context).pop();
 
-                                        /*  final connectivityResult =
-                                            await (Connectivity()
-                                                .checkConnectivity());
-                                        setState(() {
-                                          _connectionStatus = connectivityResult;
-                                        });
-                                        if (_connectionStatus ==
-                                            ConnectivityResult.wifi) {
-                                          if (context.mounted) {
-                                            userLogout(context);
-                                          }
-                                        } else if (_connectionStatus ==
-                                            ConnectivityResult.mobile) {
-                                          if (context.mounted) {
-                                            userLogout(context);
-                                          }
-                                        } else {
-                                          if (context.mounted) {
-                                            Utility.showNoNetworkDialog(
-                                              context,
-                                            );
-                                          }
-                                        }*/
                                         setState(() {});
                                       },
                                       style: ElevatedButton.styleFrom(
@@ -728,9 +733,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         false,
       );
     }
+    Helper().showToast(jsonResponse['message']);
     if (jsonResponse['status'] == true) {
-      Helper().showToast(jsonResponse['message']);
-
       await sharedPreferences.setBool("profileSetUp", false);
       await sharedPreferences.setString("access_Token", '');
       setState(() {});
@@ -753,8 +757,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             (Route<dynamic> route) => false);
       }
-    } else {
-      Helper().showToast(jsonResponse['message']);
     }
   }
 }

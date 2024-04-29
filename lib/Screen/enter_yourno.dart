@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ApiService/api_service.dart';
 import '../Utils/custom_app_button.dart';
@@ -28,7 +27,6 @@ class EnterYourNo extends StatefulWidget {
 class _EnterYourNoState extends State<EnterYourNo> {
   TextEditingController phoneCn = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  late ConnectivityResult _connectionStatus;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,28 +92,16 @@ class _EnterYourNoState extends State<EnterYourNo> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () async {
           if (isValidate()) {
-            enterNumberApi(context);
+            final List<ConnectivityResult> connectivityResult =
+                await (Connectivity().checkConnectivity());
 
-            // final connectivityResult =
-            //     await (Connectivity().checkConnectivity());
-            // // setState(() {
-            // //   _connectionStatus = connectivityResult
-            // // });
-            // if (connectivityResult == ConnectivityResult.wifi) {
-            //   if (context.mounted) {
-            //     enterNumberApi(context);
-            //   }
-            // } else if (connectivityResult == ConnectivityResult.mobile) {
-            //   if (context.mounted) {
-            //     enterNumberApi(context);
-            //   }
-            // } else {
-            //   if (context.mounted) {
-            //     Utility.showNoNetworkDialog(
-            //       context,
-            //     );
-            //   }
-            // }
+            if (connectivityResult.contains(ConnectivityResult.mobile)) {
+              enterNumberApi(context);
+            } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+              enterNumberApi(context);
+            } else {
+              Utility.showNoNetworkDialog(context);
+            }
           }
         },
       ),
@@ -131,8 +117,6 @@ class _EnterYourNoState extends State<EnterYourNo> {
   }
 
   Future<void> enterNumberApi(BuildContext context) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-
     if (context.mounted) {
       Utility.progressLoadingDialog(context, true);
     }
@@ -157,11 +141,10 @@ class _EnterYourNoState extends State<EnterYourNo> {
     Map<String, dynamic> jsonResponse = jsonDecode(
       response.body,
     );
-
+    Helper().showToast(
+      jsonResponse['message'],
+    );
     if (jsonResponse['status'] == true) {
-      Helper().showToast(
-        jsonResponse['message'],
-      );
       if (context.mounted) {
         Navigator.push(
           context,
@@ -170,10 +153,6 @@ class _EnterYourNoState extends State<EnterYourNo> {
               phoneNo: phoneCn.text.trim(),
             ),
           ),
-        );
-      } else {
-        Helper().showToast(
-          jsonResponse['message'],
         );
       }
     }

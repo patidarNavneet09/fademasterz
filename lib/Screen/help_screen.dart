@@ -75,7 +75,7 @@ class _HelpScreenState extends State<HelpScreen> {
               ),
               child: Column(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     height: 12,
                   ),
                   Row(
@@ -177,7 +177,7 @@ class _HelpScreenState extends State<HelpScreen> {
                       SvgPicture.asset(
                         AppIcon.instagram,
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 8,
                       ),
                       Text(
@@ -199,7 +199,7 @@ class _HelpScreenState extends State<HelpScreen> {
                       SvgPicture.asset(
                         AppIcon.twitterIcon,
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 8,
                       ),
                       Text(
@@ -222,7 +222,7 @@ class _HelpScreenState extends State<HelpScreen> {
                       SvgPicture.asset(
                         AppIcon.facebookIcon,
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 8,
                       ),
                       Text(
@@ -244,7 +244,7 @@ class _HelpScreenState extends State<HelpScreen> {
                       SvgPicture.asset(
                         AppIcon.whatsappIcon,
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 8,
                       ),
                       Text(
@@ -265,7 +265,6 @@ class _HelpScreenState extends State<HelpScreen> {
   }
 
   Future<void> launchUrlStart({required String url}) async {
-    debugPrint('>>>>>>>>>>>>>>${url}<<<<<<<<<<<<<<');
     if (!await launchUrl(Uri.parse(url))) {
       throw 'Could not launch $url';
     }

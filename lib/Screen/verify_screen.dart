@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fademasterz/Modal/verify_otp_modal.dart';
 import 'package:fademasterz/Screen/profile_setup_screen.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
@@ -268,27 +269,16 @@ class _VerifyScreenState extends State<VerifyScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () async {
           if (isValidate()) {
-            verifyOtp(context);
-            // final connectivityResult =
-            //     await (Connectivity().checkConnectivity());
-            // // setState(() {
-            // //   _connectionStatus = connectivityResult
-            // // });
-            // if (connectivityResult == ConnectivityResult.wifi) {
-            //   if (context.mounted) {
-            //     verifyOtp(context);
-            //   }
-            // } else if (connectivityResult == ConnectivityResult.mobile) {
-            //   if (context.mounted) {
-            //     verifyOtp(context);
-            //   }
-            // } else {
-            //   if (context.mounted) {
-            //     Utility.showNoNetworkDialog(
-            //       context,
-            //     );
-            //   }
-            // }
+            final List<ConnectivityResult> connectivityResult =
+                await (Connectivity().checkConnectivity());
+
+            if (connectivityResult.contains(ConnectivityResult.mobile)) {
+              verifyOtp(context);
+            } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+              verifyOtp(context);
+            } else {
+              Utility.showNoNetworkDialog(context);
+            }
           }
         },
       ),

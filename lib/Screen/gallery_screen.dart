@@ -153,16 +153,21 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         onTap: () {
                           showDialog(
                             context: context,
+                            barrierDismissible: false,
                             builder: (context) {
                               return Dialog(
                                 backgroundColor: Colors.transparent,
                                 child: Stack(children: [
-                                  Image.network(
-                                    ApiService.imageUrl +
-                                        (widget.gallery?[index].image ?? ''),
-                                    //     images[index],
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width,
+                                    height: 200,
+                                    child: Image.network(
+                                      ApiService.imageUrl +
+                                          (widget.gallery?[index].image ?? ''),
+                                      //     images[index],
 
-                                    //fit: BoxFit.fill,
+                                      fit: BoxFit.fill,
+                                    ),
                                   ),
                                   Positioned(
                                     right: 0,

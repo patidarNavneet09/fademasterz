@@ -44,8 +44,8 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
 
   TextEditingController noteCn = TextEditingController();
   String _selectedDate = '';
-  int? specialist_id;
-  var specialist;
+  int? specialistId;
+  var speciaList;
 
   /// The method for [DateRangePickerSelectionChanged] callback, which will be
   /// called whenever a selection changed on the date picker widget.
@@ -244,13 +244,13 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 11, vertical: 5),
                           itemBuilder: (BuildContext context, int index) {
-                            specialist = chooseAvailabilityResponse
+                            speciaList = chooseAvailabilityResponse
                                 .data?.availableSpecialist?[index];
                             return InkWell(
                               onTap: () async {
                                 selectIndex = index;
 
-                                specialist_id = (specialist?.id);
+                                specialistId = (speciaList?.id);
 
                                 await _selectSpecialistTimeApi(context);
 
@@ -279,7 +279,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                                               BorderRadius.circular(30),
                                           child: Image.network(
                                             ApiService.imageUrl +
-                                                (specialist?.image ?? ''),
+                                                (speciaList?.image ?? ''),
                                             width: 60,
                                             height: 60,
                                             fit: BoxFit.fill,
@@ -287,7 +287,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                                         ),
                                       ),
                                       Text(
-                                        (specialist?.name ?? ''),
+                                        (speciaList?.name ?? ''),
                                         style: AppFonts.yellowFont.copyWith(
                                           color: selectIndex == index
                                               ? null
@@ -532,7 +532,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
                 false)) {
               int specialistId = (chooseAvailabilityResponse
                       .data?.availableSpecialist?[selectIndex].id ??
-                  specialist?.id);
+                  speciaList?.id);
               String? time =
                   selectSpecialistTimeResponse.data?[timeSelectIndex].time;
               String? date = '2024-04-20';
@@ -599,7 +599,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
               ),
               const Spacer(),
               const Text(
-                AppStrings.Continue,
+                AppStrings.continueString,
                 style: AppFonts.blackFont,
               ),
               const SizedBox(
@@ -696,7 +696,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
     request["shop_id"] = sharedPreferences.getInt('shop_id');
     request["specialist_id"] = (chooseAvailabilityResponse
             .data?.availableSpecialist?[selectIndex].id ??
-        specialist_id); // sharedPreferences.getInt('specialist_id');
+        specialistId); // sharedPreferences.getInt('specialist_id');
     request["selected_date"] = DateFormat('yyyy-MM-dd')
         .format(
           DateTime.parse(
