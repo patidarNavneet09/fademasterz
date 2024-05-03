@@ -3,7 +3,7 @@ import 'package:fademasterz/Utils/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../Screen/enter_yourno.dart';
+import '../Screen/enter_yourNo.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,7 +37,24 @@ class _SplashScreenState extends State<SplashScreen> {
     //   );
     // });
     getLocalData();
-    setState(() {});
+
+    // final listener =
+    //     InternetConnection().onStatusChange.listen((InternetStatus status) {
+    //   switch (status) {
+    //     case InternetStatus.connected:
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'Data connection is available.'}<<<<<<<<<<<<<<');
+    //       // The internet is now connected
+    //       break;
+    //     case InternetStatus.disconnected:
+    //       Utility.showNoGetNetworkDialog(context);
+    //       debugPrint(
+    //           '>>>>>>>>>>>>>>${'You are disconnected from the internet.'}<<<<<<<<<<<<<<');
+    //       // The internet is now disconnected
+    //       break;
+    //   }
+    // });
+
     super.initState();
   }
 

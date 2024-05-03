@@ -21,7 +21,7 @@ import '../Booking/cancelled_booking_screen.dart';
 import '../Utils/app_fonts.dart';
 import '../Utils/helper.dart';
 import '../Utils/utility.dart';
-import 'enter_yourno.dart';
+import 'enter_yourNo.dart';
 
 class ProfileScreen extends StatefulWidget {
   final Function(int) onTap;

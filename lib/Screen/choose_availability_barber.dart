@@ -678,6 +678,7 @@ class _ChooseAvailabilityBarberState extends State<ChooseAvailabilityBarber> {
         setState(() {});
       }
     } catch (e) {
+      debugPrint('>>>>>>>>>>>>>>${e.toString()}<<<<<<<<<<<<<<');
       Helper().showToast(e.toString());
     }
   }

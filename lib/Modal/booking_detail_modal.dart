@@ -40,6 +40,7 @@ class BookingDetailResponse {
 class BookingDetailData {
   int? id;
   String? bookingId;
+  int? shopId;
   DateTime? date;
   String? startTime;
   String? specialistId;
@@ -57,6 +58,7 @@ class BookingDetailData {
   BookingDetailData({
     this.id,
     this.bookingId,
+    this.shopId,
     this.date,
     this.startTime,
     this.specialistId,
@@ -76,6 +78,7 @@ class BookingDetailData {
       BookingDetailData(
         id: json["id"],
         bookingId: json["booking_id"],
+        shopId: json["shop_id"],
         date: json["date"] == null ? null : DateTime.parse(json["date"]),
         startTime: json["start_time"],
         specialistId: json["specialist_id"].toString(),
@@ -97,6 +100,7 @@ class BookingDetailData {
   Map<String, dynamic> toJson() => {
         "id": id,
         "booking_id": bookingId,
+        "shop_id": shopId,
         "date":
             "${date!.year.toString().padLeft(4, '0')}-${date!.month.toString().padLeft(2, '0')}-${date!.day.toString().padLeft(2, '0')}",
         "start_time": startTime,
@@ -117,7 +121,7 @@ class BookingDetailData {
 
   @override
   String toString() {
-    return 'BookingDetailData{id: $id, bookingId: $bookingId, date: $date, startTime: $startTime, specialistId: $specialistId, subTotal: $subTotal, tax: $tax, total: $total, bookingStatus: $bookingStatus, serviceIds: $serviceIds, shopImage: $shopImage, shopName: $shopName, shopAddress: $shopAddress, specialistName: $specialistName, services: $services}';
+    return 'BookingDetailData{id: $id, bookingId: $bookingId, shopId: $shopId, date: $date, startTime: $startTime, specialistId: $specialistId, subTotal: $subTotal, tax: $tax, total: $total, bookingStatus: $bookingStatus, serviceIds: $serviceIds, shopImage: $shopImage, shopName: $shopName, shopAddress: $shopAddress, specialistName: $specialistName, services: $services}';
   }
 }
 

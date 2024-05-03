@@ -25,9 +25,9 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: ListView.separated(
-          itemCount: 12,
+          itemCount: 8,
           shrinkWrap: true,
           itemBuilder: (BuildContext context, int index) {
             return InkWell(
@@ -35,7 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ChatScreenInBox(),
+                    builder: (context) => const ChatScreenInBox(),
                   ),
                 );
               },

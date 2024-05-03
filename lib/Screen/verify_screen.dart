@@ -104,7 +104,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
   @override
   void initState() {
     mobileStarttimer();
-    setState(() {});
+
     super.initState();
   }
 
@@ -336,6 +336,12 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
       sharedPreferences.setString(
           "access_Token", verifyOtpModal.data!.userDetail!.token.toString());
+      var senderId = verifyOtpModal.data!.userDetail!.id;
+      var email = verifyOtpModal.data!.userDetail!.email;
+
+      debugPrint('>>>>>senderId>>>>>>>>>${senderId}<<<<<<<<<<<<<<');
+      sharedPreferences.setInt("senderId", senderId!);
+      sharedPreferences.setString("email", email!);
 
       if (context.mounted) {
         if (verifyOtpModal.data?.isSetup == 'yes') {

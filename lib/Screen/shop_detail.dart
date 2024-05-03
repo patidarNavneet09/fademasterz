@@ -850,6 +850,8 @@ class _ShopDetailState extends State<ShopDetail> {
       shopDetailModal = ShopDetailModal.fromJson(jsonResponse);
       openTime = shopDetailModal.data?.shopStartTime;
       closeTime = shopDetailModal.data?.shopEndTime;
+      var id = shopDetailModal.data?.id;
+      debugPrint('>>>>>>>>>id>>>>>${id}<<<<<<<<<<<<<<');
       _updateShopStatus(openTime!, closeTime!);
       setState(() {});
     }

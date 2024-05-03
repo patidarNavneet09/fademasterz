@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse) {
-      homeDetail(context: context);
+      homeDetailApi(context: context);
 
       // return;
     } else {
@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       );
-      homeDetail(context: context);
+      homeDetailApi(context: context);
     }
   }
 
@@ -170,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (permission == LocationPermission.deniedForever) {
+      Geolocator.openAppSettings();
       return Future.error(
           'Location permissions are permanently denied, we cannot request permissions.');
     }
@@ -315,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         onChanged: (value) {
                           // if (value.isNotEmpty) {
-                          homeDetail(context: context, searchValue: value);
+                          homeDetailApi(context: context, searchValue: value);
                           setState(() {});
                           // }
                         },
@@ -514,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 width: 10,
                                               ),
                                               Text(
-                                                (item?.distance ?? ''),
+                                                '${item?.distance ?? ' '} km',
                                                 style: AppFonts.regular
                                                     .copyWith(
                                                         fontSize: 14,
@@ -675,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 width: 10,
                                               ),
                                               Text(
-                                                (item?.distance ?? ''),
+                                                '${item?.distance ?? ' '} km',
                                                 style: AppFonts.regular
                                                     .copyWith(
                                                         fontSize: 14,
@@ -735,7 +736,7 @@ class _HomeScreenState extends State<HomeScreen> {
   HomePageModal homePageModal = HomePageModal();
   HomePageModal? searchHomePageModal;
 
-  Future<void> homeDetail({
+  Future<void> homeDetailApi({
     required BuildContext context,
     String? searchValue,
   }) async {

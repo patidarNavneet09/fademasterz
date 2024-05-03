@@ -33,7 +33,7 @@ class AppFonts {
     fontSize: 14,
     color: AppColor.lightWhite,
   );
-  static const TextStyle yellowFont = const TextStyle(
+  static const TextStyle yellowFont = TextStyle(
     fontFamily: 'Poppins',
     fontWeight: FontWeight.w400,
     fontSize: 14,

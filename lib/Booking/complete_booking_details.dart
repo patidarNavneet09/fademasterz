@@ -16,6 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../ApiService/api_service.dart';
 import '../Dashboard/dashboard.dart';
 import '../Modal/booking_detail_modal.dart';
+import '../Screen/chat_inbox_screen.dart';
+import '../Screen/choose_availability_barber.dart';
 import '../Utils/app_assets.dart';
 import '../Utils/app_string.dart';
 import '../Utils/custom_app_button.dart';
@@ -601,9 +603,8 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const DashBoardScreen(selectIndex: 2),
-                                ),
+                                    builder: (context) =>
+                                        const ChatScreenInBox()),
                               );
                             },
                             title: AppStrings.chatNow,
@@ -621,6 +622,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                           child: MyAppButton(
                             onPress: () {
                               showBottomSheet();
+                              //Navigator.of(context).pop();
                             },
                             radius: 6,
                             height: 50,
@@ -793,6 +795,10 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
     // );
     if (jsonResponse['status']) {
       bookingDetailResponse = BookingDetailResponse.fromJson(jsonResponse);
+      var shopId = bookingDetailResponse?.data?.shopId;
+      var bookingId = bookingDetailResponse?.data?.bookingId;
+      sharedPreferences.setInt('receiverId', shopId!);
+      debugPrint('>>>>>>id>>>>>>>>${shopId}<<<<<<<<<<<<<<');
 
       setState(() {});
     }
@@ -869,9 +875,10 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
       }
     }
     _showBottomSheet(
-        context: context,
-        description: jsonResponse["message"],
-        isSuccess: jsonResponse['status']);
+      context: context,
+      description: jsonResponse["message"],
+      isSuccess: jsonResponse['status'],
+    );
   }
 
   Future showBottomSheet() async {
@@ -947,15 +954,16 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
                 ),
                 MyAppButton(
                   onPress: () {
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (context) => ChooseAvailabilityBarber(
-                    //         selectedServiceList: [],
-                    //         price:
-                    //             (bookingDetailResponse?.data?.subTotal ?? ''),
-                    //       ),
-                    //     ));
+                    Navigator.of(context).pop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChooseAvailabilityBarber(
+                          selectedServiceList: [],
+                          price: (bookingDetailResponse?.data?.subTotal ?? ''),
+                        ),
+                      ),
+                    );
                     // Navigator.pushAndRemoveUntil(
                     //     context,
                     //     MaterialPageRoute(

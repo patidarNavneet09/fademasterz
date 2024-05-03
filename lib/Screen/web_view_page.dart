@@ -236,9 +236,9 @@ import 'package:flutter/material.dart';
 import 'package:webviewx_plus/webviewx_plus.dart';
 
 class WebViewPage extends StatefulWidget {
-  String url = '';
+  final String url;
 
-  WebViewPage({super.key, required this.url});
+  const WebViewPage({super.key, required this.url});
 
   @override
   State<WebViewPage> createState() => _WebViewPageState();
@@ -278,7 +278,7 @@ class _WebViewPageState extends State<WebViewPage> {
       body: SafeArea(
         child: Container(
           width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(),
+          decoration: const BoxDecoration(),
           child: Stack(
             children: [
               _buildWebViewX(),
@@ -286,7 +286,8 @@ class _WebViewPageState extends State<WebViewPage> {
                   ? Container(
                       color: Colors.white,
                       alignment: Alignment.center,
-                      child: CircularProgressIndicator(color: AppColor.yellow),
+                      child: const CircularProgressIndicator(
+                          color: AppColor.yellow),
                     )
                   : Container()
             ],
@@ -298,7 +299,7 @@ class _WebViewPageState extends State<WebViewPage> {
 
   Widget _buildWebViewX() {
     return WebViewX(
-      key: ValueKey('webviewx'),
+      key: const ValueKey('webviewx'),
       initialContent: initialContent,
       initialSourceType: SourceType.url,
       height: screenSize.height,
@@ -366,30 +367,32 @@ class _WebViewPageState extends State<WebViewPage> {
   void readJS() async {
     String html = await webviewController.evalRawJavascript(
         "window.document.getElementsByTagName('body')[0].innerHTML;");
-    print("html......${html}");
+    debugPrint('>>>html>>>>>>>>>>>$html<<<<<<<<<<<<<<');
+
     print(
         "htmldata.. ${html.substring(1, html.toString().length - 1).replaceAll("\\", "")}");
     jsondata =
-        "${html.substring(1, html.toString().length - 1).replaceAll("\\", "")}";
-    print("object?????????????????????  ${jsondata}");
+        html.substring(1, html.toString().length - 1).replaceAll("\\", "");
 
+    debugPrint('>>>>>object?????>>>>>>>>>$jsondata<<<<<<<<<<<<<<');
     settingsFromJson(jsondata);
-    print("map...${jsondata}");
-    print("{" + jsondata + "}");
+    debugPrint('>>>>>>>map>>>>>>>$jsondata<<<<<<<<<<<<<<');
+
     // parse(html);
-    print("data ${jsondata.toString()}");
+    debugPrint('>>>>data>>>>>>>>>>${jsondata.toString()}<<<<<<<<<<<<<<');
   }
 
   Future<WebViewModel> settingsFromJson(String str) async {
-    print("fnjgjkh${"{" + jsondata + "}"}");
+    debugPrint('>>>>>>>>fnjgjkh>>>>>>$jsondata<<<<<<<<<<<<<<');
     var jsonData;
     if (Platform.isAndroid) {
       jsonData = convert.jsonDecode(str);
     } else {
-      jsonData = convert.jsonDecode("{" + str + "}");
+      jsonData = convert.jsonDecode("{$str}");
     }
     // var jsonData = convert.jsonDecode("{"+str+"}");
-    print("jsondata ${jsonData['status']}");
+
+    debugPrint('>>>>>>>jsonData>>>>>>>${jsonData['status']}<<<<<<<<<<<<<<');
     // Helper().showToast(jsonData['message']);
     Navigator.of(context).pop(jsonData['status']);
 

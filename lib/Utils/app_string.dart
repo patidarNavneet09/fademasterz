@@ -116,4 +116,6 @@ class AppStrings {
   static String twitter = 'Twitter';
   static String facebook = 'Facebook';
   static String whatsapp = 'Whatsapp';
+
+  static String rescheduleSummary = 'Reschedule Summary';
 }

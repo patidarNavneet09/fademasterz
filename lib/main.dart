@@ -2,20 +2,23 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fademasterz/Utils/app_color.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'SplashScreen/splash_screen.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]).then(
     (value) => runApp(
-      MyApp(),
+      const MyApp(),
     ),
   );
 }
@@ -31,6 +34,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     _getId();
+
     setState(() {});
     super.initState();
   }
