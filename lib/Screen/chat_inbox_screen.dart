@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
 import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/custom_app_bar.dart';
+import 'package:fademasterz/Utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,6 +44,7 @@ class _ChatScreenInBoxState extends State<ChatScreenInBox> {
           chatCn.text.toString());
       chatCn.clear();
     } else {
+      Helper().showToast('Enter Some Text');
       debugPrint('>>>>>>>>>>>>>>${'enter some text'}<<<<<<<<<<<<<<');
     }
   }
@@ -154,10 +156,10 @@ class _ChatScreenInBoxState extends State<ChatScreenInBox> {
                 radius: 4,
                 isFilled: true,
                 style: AppFonts.textFieldFont.copyWith(color: AppColor.black),
-                fillColor: Color(0xffF4F4F4),
+                fillColor: const Color(0xffF4F4F4),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               width: 10,
             ),
             InkWell(
@@ -187,7 +189,7 @@ class _ChatScreenInBoxState extends State<ChatScreenInBox> {
           return const Text('Error');
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         return ListView.builder(
           shrinkWrap: true,
@@ -195,8 +197,7 @@ class _ChatScreenInBoxState extends State<ChatScreenInBox> {
           itemBuilder: (context, index) {
             // Map<String, dynamic> map =
             //     snapshot.data?.docs[index].data();
-            debugPrint(
-                '>>>>>>>>>>>>>>${snapshot.data?.docs.length}<<<<<<<<<<<<<<');
+
             return Align(
               alignment: snapshot.data!.docs[index]['senderId'] == senderId
                   ? Alignment.centerRight
@@ -217,7 +218,7 @@ class _ChatScreenInBoxState extends State<ChatScreenInBox> {
                     color: Colors.green),
                 child: Text(
                   snapshot.data!.docs[index]['message'].toString(),
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
                 ),
               ),
             );

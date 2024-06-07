@@ -7,6 +7,7 @@ import 'package:fademasterz/Utils/app_color.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/app_string.dart';
 import 'package:fademasterz/Utils/custom_textfield.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
@@ -92,13 +93,14 @@ class _EnterYourNoState extends State<EnterYourNo> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () async {
           if (isValidate()) {
+            signUpOtpAuth();
             final List<ConnectivityResult> connectivityResult =
                 await (Connectivity().checkConnectivity());
 
             if (connectivityResult.contains(ConnectivityResult.mobile)) {
-              enterNumberApi(context);
+              //   enterNumberApi(context);
             } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
-              enterNumberApi(context);
+              //   enterNumberApi(context);
             } else {
               Utility.showNoNetworkDialog(context);
             }
@@ -121,7 +123,7 @@ class _EnterYourNoState extends State<EnterYourNo> {
       Utility.progressLoadingDialog(context, true);
     }
     var request = {};
-    request["country_code"] = "91";
+    request["country_code"] = "+91";
     request['mobile_number'] = phoneCn.text.trim();
 
     var response = await http.post(
@@ -146,7 +148,7 @@ class _EnterYourNoState extends State<EnterYourNo> {
     );
     if (jsonResponse['status'] == true) {
       if (context.mounted) {
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => VerifyScreen(
@@ -156,5 +158,89 @@ class _EnterYourNoState extends State<EnterYourNo> {
         );
       }
     }
+  }
+
+  Future<void> signUpOtpAuth() {
+    Utility.progressLoadingDialog(context, true);
+    FirebaseAuth auth = FirebaseAuth.instance;
+    return auth.verifyPhoneNumber(
+        phoneNumber: '+91${phoneCn.text}',
+        verificationCompleted: (e) {
+          setState(() {
+            Utility.progressLoadingDialog(context, false);
+          });
+        },
+        verificationFailed: (e) {
+          setState(() {
+            debugPrint(
+                '>>>>>>>>>>>>>>${'message ${e.message}, phone ${e.phoneNumber} and error is $e'}<<<<<<<<<<<<<<');
+
+            Helper().showToast('Otp failed $e');
+            Utility.progressLoadingDialog(context, false);
+          });
+        },
+        codeSent: (String verificationId, int? token) {
+          setState(() {
+            Utility.progressLoadingDialog(context, false);
+          });
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => VerifyScreen(
+                      phoneNo: phoneCn.text.toString(),
+                      verificationId: verificationId,
+                    )),
+          );
+          setState(() {});
+        },
+        codeAutoRetrievalTimeout: (e) {
+          setState(() {});
+        });
+  }
+
+  Future<void> verifyPhoneNumber(String phoneNumber) async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    debugPrint('>>>phoneNumber>>>>>>>>>>>${phoneNumber}<<<<<<<<<<<<<<');
+
+    await auth.verifyPhoneNumber(
+      phoneNumber: '+91${phoneNumber}',
+      verificationCompleted: (
+        PhoneAuthCredential credential,
+      ) async {
+        // Auto-retrieval of OTP completed (e.g., using device's phone number)
+        // UserCredential userCredential = await auth.signInWithCredential(
+        //   credential,
+        // );
+        // debugPrint(
+        //     '>>>>>>userCredential>>>>>>>>${userCredential}<<<<<<<<<<<<<<');
+        // Handle signed-in user
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        debugPrint('>>>>>>>e>>>>>>>${e}<<<<<<<<<<<<<<');
+        // Handle verification failure (e.g., invalid phone number)
+      },
+      // codeSent: (String verificationId, int resendToken) {
+      //   // OTP code sent to phone number
+      //   // Store `verificationId` for later use
+      // },
+      codeAutoRetrievalTimeout: (String phoneNumber) {
+        debugPrint('>>>>phoneNumber>>>>>>>>>>${phoneNumber}<<<<<<<<<<<<<<');
+        // OTP auto-retrieval timed out
+      },
+      timeout: const Duration(seconds: 60), // Timeout for OTP entry
+      forceResendingToken: 0,
+      codeSent: (String verificationId, int? resendToken) {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VerifyScreen(
+                verificationId: verificationId,
+              ),
+            ));
+        debugPrint(
+            '>>>>>>verificationId>>>>>>>>${verificationId}<<<<<<<<<<<<<<');
+        debugPrint('>>>>>resendToken>>>>>>>>>${resendToken}<<<<<<<<<<<<<<');
+      }, // Used for resending OTP (0 for new OTP)
+    );
   }
 }

@@ -798,7 +798,7 @@ class _CompleteBookingDetailState extends State<CompleteBookingDetail> {
       var shopId = bookingDetailResponse?.data?.shopId;
       var bookingId = bookingDetailResponse?.data?.bookingId;
       sharedPreferences.setInt('receiverId', shopId!);
-      debugPrint('>>>>>>id>>>>>>>>${shopId}<<<<<<<<<<<<<<');
+      debugPrint('>>>>>>shopId>>>>>>>>$shopId<<<<<<<<<<<<<<');
 
       setState(() {});
     }

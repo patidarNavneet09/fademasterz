@@ -7,6 +7,7 @@ import 'package:fademasterz/Screen/profile_setup_screen.dart';
 import 'package:fademasterz/Utils/app_assets.dart';
 import 'package:fademasterz/Utils/app_fonts.dart';
 import 'package:fademasterz/Utils/helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
@@ -22,8 +23,9 @@ import '../Utils/utility.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String? phoneNo;
+  final String? verificationId;
 
-  const VerifyScreen({super.key, this.phoneNo});
+  const VerifyScreen({super.key, this.phoneNo, this.verificationId});
 
   @override
   State<VerifyScreen> createState() => _VerifyScreenState();
@@ -101,6 +103,55 @@ class _VerifyScreenState extends State<VerifyScreen> {
     );
   }
 
+  Future<void> otpVerify() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    int error;
+    String otp = otpTextFieldCn.text;
+    if (otp.isEmpty) {
+      error = 0;
+      Helper().showToast('Please enter  otp');
+      setState(() {});
+    } else if (otp.length < 6) {
+      error = 1;
+      Helper().showToast('Please enter conform otp');
+      setState(() {});
+    } else {
+      // verifyMobileNumber();
+      setState(() {
+        Utility.progressLoadingDialog(context, true);
+      });
+      final credential = PhoneAuthProvider.credential(
+          verificationId: widget.verificationId.toString(),
+          smsCode: otpTextFieldCn.text);
+      try {
+        await auth.signInWithCredential(credential);
+        // dialogSuccess(context);
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const DashBoardScreen(
+                      selectIndex: 0,
+                    )),
+          );
+        }
+        setState(() {});
+      } catch (e) {
+        setState(() {
+          Utility.progressLoadingDialog(context, false);
+        });
+        Helper().showToast('Please enter valid otp');
+        // Navigator.pushAndRemoveUntil(
+        //     context,
+        //     MaterialPageRoute(
+        //         builder: (context) => LoginScreen()),
+        //     (route) => false);
+      }
+
+      setState(() {});
+    }
+  }
+
   @override
   void initState() {
     mobileStarttimer();
@@ -155,7 +206,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
             PinCodeTextField(
               appContext: context,
               textStyle: AppFonts.textFieldFont,
-              length: 4,
+              length: 6,
               obscureText: true,
               //obscuringCharacter: '*',
               obscuringWidget: const Text(
@@ -181,7 +232,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 shape: PinCodeFieldShape.box,
                 borderRadius: BorderRadius.circular(8),
                 fieldHeight: 60,
-                fieldWidth: 71,
+                fieldWidth: 40,
                 activeFillColor: AppColor.black,
               ),
               cursorColor: AppColor.yellow,
@@ -269,6 +320,52 @@ class _VerifyScreenState extends State<VerifyScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         onPress: () async {
           if (isValidate()) {
+            FirebaseAuth auth = FirebaseAuth.instance;
+            int error;
+            String otp = otpTextFieldCn.text;
+            if (otp.isEmpty) {
+              error = 0;
+              Helper().showToast('Please enter  otp');
+              setState(() {});
+            } else if (otp.length < 6) {
+              error = 1;
+              Helper().showToast('Please enter conform otp');
+              setState(() {});
+            } else {
+              // verifyMobileNumber();
+              setState(() {
+                Utility.progressLoadingDialog(context, true);
+              });
+              final credential = PhoneAuthProvider.credential(
+                  verificationId: widget.verificationId.toString(),
+                  smsCode: otpTextFieldCn.text);
+              try {
+                await auth.signInWithCredential(credential);
+                // dialogSuccess(context);
+                if (mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DashBoardScreen(
+                              selectIndex: 0,
+                            )),
+                  );
+                }
+                setState(() {});
+              } catch (e) {
+                setState(() {
+                  Utility.progressLoadingDialog(context, false);
+                });
+                Helper().showToast('Please enter valid otp');
+                // Navigator.pushAndRemoveUntil(
+                //     context,
+                //     MaterialPageRoute(
+                //         builder: (context) => LoginScreen()),
+                //     (route) => false);
+              }
+
+              setState(() {});
+            }
             final List<ConnectivityResult> connectivityResult =
                 await (Connectivity().checkConnectivity());
 
@@ -354,13 +451,13 @@ class _VerifyScreenState extends State<VerifyScreen> {
             ),
           );
         } else {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const DashBoardScreen(selectIndex: 0),
-            ),
-            (route) => false,
-          );
+          // Navigator.pushAndRemoveUntil(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => const DashBoardScreen(selectIndex: 0),
+          //   ),
+          //   (route) => false,
+          // );
         }
       }
     }
